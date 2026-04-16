@@ -3,7 +3,6 @@
   import { storyboard } from './lib/storyboard.svelte.js'
   import { thumbnailStore } from './lib/thumbnails.svelte.js'
   import SplashScreen from './lib/SplashScreen.svelte'
-  import StoryboardPicker from './lib/StoryboardPicker.svelte'
   import SlideGrid from './lib/SlideGrid.svelte'
   import Viewer from './lib/Viewer.svelte'
 
@@ -14,6 +13,20 @@
   let viewerMode = $state('new') // 'new' | 'edit'
   let viewerSlideIndex = $state(null)
   let previewOpen = $state(false)
+
+  // Auto-open last modified storyboard when a project is opened
+  $effect(() => {
+    const handle = project.handle
+    if (!handle) return
+    storyboard.loadAll(handle).then(() => {
+      const id = storyboard.latestId()
+      if (id) {
+        storyboard.openBoard(id)
+      } else {
+        storyboard.createBoard(handle, 'Untitled')
+      }
+    })
+  })
 
   function handleOpenSlide(index) {
     viewerSlideIndex = index
@@ -51,7 +64,7 @@
     previewOpen = false
   }
 
-  // Reset viewer state when storyboard closes
+  // Reset viewer state when storyboard is cleared
   $effect(() => {
     if (!storyboard.current) {
       viewerOpen = false
@@ -97,12 +110,21 @@
   ondragleave={handleDragLeave}
   ondragover={handleDragOver}
   ondrop={handleDrop}
+  onbeforeunload={(e) => {
+    if (storyboard.dirty) {
+      e.preventDefault()
+      return ''
+    }
+  }}
 />
 
 {#if !project.handle}
   <SplashScreen />
-{:else if !storyboard.current}
-  <StoryboardPicker />
+{:else if storyboard.loading || !storyboard.current}
+  <!-- Loading: project open but storyboard not yet resolved -->
+  <div class="flex h-screen w-screen items-center justify-center bg-neutral-950">
+    <span class="text-sm text-neutral-600">Opening…</span>
+  </div>
 {:else if previewOpen}
   <Viewer
     previewMode={true}

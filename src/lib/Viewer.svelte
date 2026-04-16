@@ -194,16 +194,12 @@
 	})
 
 	function handleBack() {
-		if (captureMode || previewMode) {
-			stopRequested = true
-			onCancel()
-		} else {
-			storyboard.close()
-		}
+		stopRequested = true
+		onCancel()
 	}
 
 	async function handleSave() {
-		await storyboard.write(project.handle)
+		await storyboard.save(project.handle)
 		await project.save()
 	}
 
