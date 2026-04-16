@@ -1,7 +1,5 @@
-@import 'tailwindcss';
 @import '@krisenstab/vantage/theme.css';
 
-/* Narrator app theme — extends vantage base theme */
 @theme {
   --color-brand: var(--color-vantage-brand);
 }

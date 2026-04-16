@@ -181,6 +181,7 @@
 
         {#if dropdownOpen}
           <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="absolute top-full left-0 z-50 mt-1 w-64 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 shadow-xl"
             onclick={(e) => e.stopPropagation()}

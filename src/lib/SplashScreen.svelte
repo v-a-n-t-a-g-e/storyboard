@@ -7,53 +7,46 @@
   })
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-neutral-950 text-neutral-100">
-  <div class="w-full max-w-sm space-y-8 px-6">
-    <div class="text-center">
-      <h1 class="text-3xl font-semibold tracking-tight">Narrator</h1>
-      <p class="mt-2 text-sm text-neutral-400">Storyboard tool for Vantage</p>
-    </div>
+<header class="flex items-center gap-2.5 px-5 py-2.5">
+  <div class="h-px w-5 bg-black"></div>
+  <h1 class=" text-nowrap">Vantage Storyboard</h1>
+  <div class="h-px flex-1 bg-black"></div>
+</header>
+<div class="m-5 mt-20 flex flex-col justify-center sm:flex-row">
+  <div class=" flex w-full max-w-75 flex-col space-y-10 border p-10">
+    <p class=" text-balance">Drop a Vantage project folder, ZIP, or GLB/GLTF file</p>
 
-    <div class="space-y-3">
+    <div class=" text-xs text-neutral-600">
+      or pick a
       {#if project.hasNativeFS}
-        <button
-          class="w-full cursor-pointer rounded-lg bg-neutral-800 px-4 py-3 text-sm font-medium transition hover:bg-neutral-700"
-          onclick={() => project.open()}
-        >
-          Open Folder
+        <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
+          folder
         </button>
       {/if}
-
+      /
       <button
-        class="w-full cursor-pointer rounded-lg bg-neutral-800 px-4 py-3 text-sm font-medium transition hover:bg-neutral-700"
+        class="cursor-pointer underline hover:bg-brand/20"
         onclick={() => project.importFile()}
       >
-        Import File
+        file
       </button>
+      to open
     </div>
-
-    {#if project.recents.length > 0}
-      <div>
-        <h2 class="mb-2 text-xs font-medium tracking-wide text-neutral-500 uppercase">
-          Recent Projects
-        </h2>
-        <ul class="space-y-1">
-          {#each project.recents as recent, index (index)}
-            <li>
-              <button
-                class="w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm transition hover:bg-neutral-800"
-                onclick={() => project.openRecent(recent)}
-              >
-                {recent.name}
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
-    <p class="text-center text-xs text-neutral-600">
-      or drag and drop a project folder, ZIP, or GLB file
-    </p>
   </div>
+  {#if project.recents.length > 0}
+    <div class=" flex w-full max-w-100 flex-col items-start space-y-2.5 bg-black p-10 text-white">
+      <h2 class="text-xs">Recent Projects</h2>
+
+      <div class="flex flex-wrap gap-x-2">
+        {#each project.recents as recent, index (index)}
+          <button
+            class="-mx-1 max-w-82 min-w-0 cursor-pointer overflow-hidden px-1 text-nowrap text-ellipsis after:content-[','] last-of-type:after:content-none hover:bg-[color-mix(in_srgb,var(--color-brand)_20%,white)] hover:text-black"
+            onclick={() => project.openRecent(recent)}
+          >
+            {recent.name}
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </div>
