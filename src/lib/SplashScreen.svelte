@@ -5,7 +5,39 @@
   onMount(() => {
     project.refreshRecents()
   })
+
+  let dragCount = $state(0)
+
+  function isFileDrag(e) {
+    return e.dataTransfer?.types?.includes('Files') ?? false
+  }
+
+  function handleDragEnter(e) {
+    if (isFileDrag(e)) dragCount++
+  }
+
+  function handleDragLeave(e) {
+    if (isFileDrag(e)) dragCount--
+  }
+
+  function handleDragOver(e) {
+    if (isFileDrag(e)) e.preventDefault()
+  }
+
+  async function handleDrop(e) {
+    if (!isFileDrag(e)) return
+    e.preventDefault()
+    dragCount = 0
+    await project.drop(e)
+  }
 </script>
+
+<svelte:window
+  ondragenter={handleDragEnter}
+  ondragleave={handleDragLeave}
+  ondragover={handleDragOver}
+  ondrop={handleDrop}
+/>
 
 <header class="flex items-center gap-2.5 px-5 py-2.5">
   <div class="h-px w-5 bg-black"></div>
@@ -13,25 +45,33 @@
   <div class="h-px flex-1 bg-black"></div>
 </header>
 <div class="m-5 mt-20 flex flex-col justify-center sm:flex-row">
-  <div class=" flex w-full max-w-75 flex-col space-y-10 border p-10">
-    <p class=" text-balance">Drop a Vantage project folder, ZIP, or GLB/GLTF file</p>
+  <div
+    class="flex min-h-[200px] w-full max-w-75 flex-col space-y-10 border p-10 {dragCount > 0
+      ? 'bg-brand/20'
+      : ''}"
+  >
+    {#if dragCount === 0}
+      <p class="text-balance">Drop a Vantage project folder, ZIP, or GLB/GLTF file</p>
 
-    <div class=" text-xs text-neutral-600">
-      or pick a
-      {#if project.hasNativeFS}
-        <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
-          folder
+      <div class=" text-xs text-neutral-600">
+        or pick a
+        {#if project.hasNativeFS}
+          <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
+            folder
+          </button>
+        {/if}
+        /
+        <button
+          class="cursor-pointer underline hover:bg-brand/20"
+          onclick={() => project.importFile()}
+        >
+          file
         </button>
-      {/if}
-      /
-      <button
-        class="cursor-pointer underline hover:bg-brand/20"
-        onclick={() => project.importFile()}
-      >
-        file
-      </button>
-      to open
-    </div>
+        to open
+      </div>
+    {:else}
+      <p class="text-balance">Drop anywhere</p>
+    {/if}
   </div>
   {#if project.recents.length > 0}
     <div class=" flex w-full max-w-100 flex-col items-start space-y-2.5 bg-black p-10 text-white">

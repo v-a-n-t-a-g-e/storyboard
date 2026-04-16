@@ -6,8 +6,6 @@
   import SlideGrid from './lib/SlideGrid.svelte'
   import Viewer from './lib/Viewer.svelte'
 
-  let dragCount = $state(0)
-
   // Viewer navigation state
   let viewerOpen = $state(false)
   let viewerMode = $state('new') // 'new' | 'edit'
@@ -74,29 +72,6 @@
     }
   })
 
-  function isFileDrag(e) {
-    return e.dataTransfer?.types?.includes('Files') ?? false
-  }
-
-  function handleDragEnter(e) {
-    if (isFileDrag(e)) dragCount++
-  }
-
-  function handleDragLeave(e) {
-    if (isFileDrag(e)) dragCount--
-  }
-
-  function handleDragOver(e) {
-    if (isFileDrag(e)) e.preventDefault()
-  }
-
-  async function handleDrop(e) {
-    if (!isFileDrag(e)) return
-    e.preventDefault()
-    dragCount = 0
-    await project.drop(e)
-  }
-
   function getInitialCamera() {
     if (viewerMode === 'edit') {
       return storyboard.current?.slides[viewerSlideIndex]?.camera ?? null
@@ -112,10 +87,6 @@
       return ''
     }
   }}
-  ondragenter={handleDragEnter}
-  ondragleave={handleDragLeave}
-  ondragover={handleDragOver}
-  ondrop={handleDrop}
 />
 
 {#if !project.handle}
@@ -147,12 +118,3 @@
   />
 {/if}
 
-{#if dragCount > 0}
-  <div
-    class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-sm"
-  >
-    <div class="rounded-xl border-2 border-dashed border-neutral-500 px-12 py-8 text-neutral-300">
-      Drop project here
-    </div>
-  </div>
-{/if}
