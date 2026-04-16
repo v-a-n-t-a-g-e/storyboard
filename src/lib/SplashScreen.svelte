@@ -46,7 +46,7 @@
 </header>
 <div class="m-5 mt-20 flex flex-col justify-center sm:flex-row">
   <div
-    class="flex min-h-[200px] w-full max-w-75 flex-col space-y-10 border p-10 {dragCount > 0
+    class="flex min-h-50 w-full max-w-75 flex-col space-y-10 border p-10 {dragCount > 0
       ? 'bg-brand/20'
       : ''}"
   >
