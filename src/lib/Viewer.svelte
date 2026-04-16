@@ -4,11 +4,23 @@
 	import { storyboard } from './storyboard.svelte.js'
 	import { onMount } from 'svelte'
 
+	let {
+		captureMode = false,
+		initialCamera = null,
+		onConfirm = () => {},
+		onCancel = () => {},
+	} = $props()
+
 	let canvas = $state(null)
+	let viewer = null
 
 	onMount(() => {
-		const viewer = new SceneViewer(canvas)
-		viewer.openProject(project.handle.fs.readFile)
+		viewer = new SceneViewer(canvas)
+		viewer.openProject(project.handle.fs.readFile).then(() => {
+			if (captureMode && initialCamera !== null) {
+				viewer.setCameraState(initialCamera)
+			}
+		})
 
 		return () => {
 			viewer.dispose?.()
@@ -16,12 +28,20 @@
 	})
 
 	function handleBack() {
-		storyboard.close()
+		if (captureMode) {
+			onCancel()
+		} else {
+			storyboard.close()
+		}
 	}
 
 	async function handleSave() {
 		await storyboard.write(project.handle)
 		await project.save()
+	}
+
+	function handleCapture() {
+		onConfirm(viewer.getCameraState())
 	}
 </script>
 
@@ -34,15 +54,24 @@
 				class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
 				onclick={handleBack}
 			>
-				&larr; Back
+				&larr; {captureMode ? 'Cancel' : 'Back'}
 			</button>
 			<span class="ml-3 text-sm text-neutral-400">{storyboard.current?.name}</span>
 		</div>
-		<button
-			class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
-			onclick={handleSave}
-		>
-			Save
-		</button>
+		{#if captureMode}
+			<button
+				class="pointer-events-auto cursor-pointer rounded-md bg-blue-600/90 px-3 py-1.5 text-xs text-white backdrop-blur transition hover:bg-blue-500/90"
+				onclick={handleCapture}
+			>
+				Capture Position
+			</button>
+		{:else}
+			<button
+				class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
+				onclick={handleSave}
+			>
+				Save
+			</button>
+		{/if}
 	</div>
 </div>

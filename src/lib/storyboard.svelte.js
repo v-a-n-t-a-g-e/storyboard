@@ -58,6 +58,30 @@ export const storyboard = {
 		currentFilename = filename
 	},
 
+	/** Insert a new slide after `afterIndex` (-1 to prepend). Returns the new slide. */
+	insertSlide(afterIndex, camera) {
+		const slide = { id: crypto.randomUUID(), camera, title: '', description: '' }
+		const slides = [...current.slides]
+		slides.splice(afterIndex + 1, 0, slide)
+		current = { ...current, slides }
+		return slide
+	},
+
+	/** Update the camera of the slide at `index`. */
+	updateSlide(index, camera) {
+		const slides = current.slides.map((s, i) => (i === index ? { ...s, camera } : s))
+		current = { ...current, slides }
+	},
+
+	/** Move the slide at `fromIndex` to `toIndex`. */
+	reorderSlides(fromIndex, toIndex) {
+		const slides = [...current.slides]
+		const [removed] = slides.splice(fromIndex, 1)
+		const insertAt = toIndex > fromIndex ? toIndex - 1 : toIndex
+		slides.splice(insertAt, 0, removed)
+		current = { ...current, slides }
+	},
+
 	/** Write the current storyboard to the project filesystem. */
 	async write(handle) {
 		if (!current || !currentFilename) return

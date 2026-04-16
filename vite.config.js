@@ -7,6 +7,11 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   base: './',
   plugins: [tailwindcss(), svelte()],
+  server: {
+    fs: {
+      allow: ['..', '../../..'],
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
