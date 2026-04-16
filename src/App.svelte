@@ -13,6 +13,7 @@
   let viewerOpen = $state(false)
   let viewerMode = $state('new') // 'new' | 'edit'
   let viewerSlideIndex = $state(null)
+  let previewOpen = $state(false)
 
   function handleOpenSlide(index) {
     viewerSlideIndex = index
@@ -42,12 +43,21 @@
     viewerOpen = false
   }
 
+  function handlePreviewDone() {
+    previewOpen = false
+  }
+
+  function handlePreviewCancel() {
+    previewOpen = false
+  }
+
   // Reset viewer state when storyboard closes
   $effect(() => {
     if (!storyboard.current) {
       viewerOpen = false
       viewerSlideIndex = null
       viewerMode = 'new'
+      previewOpen = false
     }
   })
 
@@ -78,7 +88,6 @@
     if (viewerMode === 'edit') {
       return storyboard.current?.slides[viewerSlideIndex]?.camera ?? null
     }
-    // new slide: start from last slide's camera position
     return storyboard.current?.slides.at(-1)?.camera ?? null
   }
 </script>
@@ -94,6 +103,13 @@
   <SplashScreen />
 {:else if !storyboard.current}
   <StoryboardPicker />
+{:else if previewOpen}
+  <Viewer
+    previewMode={true}
+    slides={storyboard.current.slides}
+    onPreviewDone={handlePreviewDone}
+    onCancel={handlePreviewCancel}
+  />
 {:else if viewerOpen}
   <Viewer
     captureMode={true}
@@ -102,7 +118,11 @@
     onCancel={handleViewerCancel}
   />
 {:else}
-  <SlideGrid onOpenSlide={handleOpenSlide} onNewSlide={handleNewSlide} />
+  <SlideGrid
+    onOpenSlide={handleOpenSlide}
+    onNewSlide={handleNewSlide}
+    onPreview={() => (previewOpen = true)}
+  />
 {/if}
 
 {#if dragCount > 0}

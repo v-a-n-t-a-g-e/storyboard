@@ -1,4 +1,6 @@
-/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, title: string, description: string }} Slide */
+/** @typedef {'ease-in-out'|'ease-in'|'ease-out'|'linear'} Easing */
+/** @typedef {{ duration: number, easing: Easing }} Transition */
+/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string }} Slide */
 /** @typedef {{ name: string, slides: Slide[] }} Storyboard */
 /** @typedef {{ filename: string, name: string }} StoryboardEntry */
 
@@ -60,11 +62,23 @@ export const storyboard = {
 
 	/** Insert a new slide after `afterIndex` (-1 to prepend). Returns the new slide. */
 	insertSlide(afterIndex, camera) {
-		const slide = { id: crypto.randomUUID(), camera, title: '', description: '' }
+		const slide = {
+			id: crypto.randomUUID(),
+			camera,
+			transition: { duration: 1, easing: 'ease-in-out' },
+			title: '',
+			description: '',
+		}
 		const slides = [...current.slides]
 		slides.splice(afterIndex + 1, 0, slide)
 		current = { ...current, slides }
 		return slide
+	},
+
+	/** Update the transition of the slide at `index`. */
+	updateTransition(index, transition) {
+		const slides = current.slides.map((s, i) => (i === index ? { ...s, transition } : s))
+		current = { ...current, slides }
 	},
 
 	/** Update the camera of the slide at `index`. */

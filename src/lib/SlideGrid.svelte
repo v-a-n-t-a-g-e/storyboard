@@ -4,11 +4,21 @@
 	import { storyboard } from './storyboard.svelte.js'
 	import { thumbnailStore } from './thumbnails.svelte.js'
 
-	let { onOpenSlide, onNewSlide } = $props()
+	let { onOpenSlide, onNewSlide, onPreview } = $props()
+
+	/** @type {HTMLDivElement} */
+	let scrollContainer = $state(null)
 
 	// DnD state
 	let dragFromIndex = $state(null)
 	let dragOverIndex = $state(null)
+
+	const EASING_LABELS = {
+		'ease-in-out': 'Ease In-Out',
+		'ease-in': 'Ease In',
+		'ease-out': 'Ease Out',
+		linear: 'Linear',
+	}
 
 	onMount(() => {
 		thumbnailStore.generateAll(project.handle, storyboard.current.slides)
@@ -22,6 +32,22 @@
 	async function handleSave() {
 		await storyboard.write(project.handle)
 		await project.save()
+	}
+
+	/** Resolve a slide's transition, filling in defaults for older slides without one. */
+	function getTransition(slide) {
+		return slide.transition ?? { duration: 1, easing: 'ease-in-out' }
+	}
+
+	function handleDurationChange(index, raw) {
+		const duration = Math.max(0.1, parseFloat(raw) || 1)
+		const t = getTransition(storyboard.current.slides[index])
+		storyboard.updateTransition(index, { ...t, duration })
+	}
+
+	function handleEasingChange(index, easing) {
+		const t = getTransition(storyboard.current.slides[index])
+		storyboard.updateTransition(index, { ...t, easing })
 	}
 
 	// DnD handlers
@@ -67,101 +93,160 @@
 				<span class="text-xs text-neutral-500">Generating thumbnails…</span>
 			{/if}
 		</div>
-		<button
-			class="cursor-pointer rounded-md bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-700"
-			onclick={handleSave}
-		>
-			Save
-		</button>
+		<div class="flex items-center gap-2">
+			{#if (storyboard.current?.slides.length ?? 0) >= 2}
+				<button
+					class="cursor-pointer rounded-md bg-neutral-700 px-3 py-1.5 text-xs text-neutral-200 transition hover:bg-neutral-600"
+					onclick={onPreview}
+				>
+					▶ Preview
+				</button>
+			{/if}
+			<button
+				class="cursor-pointer rounded-md bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-700"
+				onclick={handleSave}
+			>
+				Save
+			</button>
+		</div>
 	</div>
 
-	<!-- Slide grid -->
-	<div class="flex-1 overflow-y-auto p-6">
+	<!-- Filmstrip -->
+	<div
+		bind:this={scrollContainer}
+		class="flex flex-1 items-center gap-0 overflow-x-auto px-8 py-8"
+		style="scrollbar-color: #404040 transparent;"
+	>
 		{#if storyboard.current?.slides.length === 0}
 			<!-- Empty state -->
-			<div class="flex h-full items-center justify-center">
-				<button
-					class="flex aspect-video w-64 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
-					onclick={() => onNewSlide(-1)}
-				>
-					<span class="text-3xl font-light">+</span>
-					<span class="text-sm">Add first slide</span>
-				</button>
-			</div>
-		{:else}
-			<div
-				class="grid gap-x-8 gap-y-6"
-				style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))"
+			<button
+				class="flex aspect-video w-64 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
+				onclick={() => onNewSlide(-1)}
 			>
-				{#each storyboard.current.slides as slide, i (slide.id)}
-					<div
-						class="group relative cursor-pointer overflow-visible rounded-xl border transition
-							{dragFromIndex === i ? 'border-neutral-600 opacity-40' : ''}
-							{dragOverIndex === i && dragFromIndex !== i
-							? 'border-blue-500 ring-2 ring-blue-500/50'
-							: dragFromIndex === i ? '' : 'border-neutral-800 hover:border-neutral-600'}"
-						draggable="true"
-						role="button"
-						tabindex="0"
-						onclick={() => onOpenSlide(i)}
-						onkeydown={(e) => e.key === 'Enter' && onOpenSlide(i)}
-						ondragstart={(e) => onDragStart(e, i)}
-						ondragover={(e) => onDragOver(e, i)}
-						ondrop={(e) => onDrop(e, i)}
-						ondragend={onDragEnd}
-					>
-						<!-- Insert-before button (appears in the left gap on hover) -->
-						{#if dragFromIndex === null}
-							<button
-								class="absolute -left-4 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-neutral-700 text-sm text-neutral-200 opacity-0 transition hover:bg-neutral-500 group-hover:opacity-100"
-								onclick={(e) => {
-									e.stopPropagation()
-									onNewSlide(i - 1)
-								}}
-								title="Insert slide before"
-							>
-								+
-							</button>
-						{/if}
-
-						<!-- Thumbnail area -->
-						<div class="aspect-video w-full overflow-hidden rounded-xl bg-neutral-900">
-							{#if thumbnailStore.thumbnails[slide.id]}
-								<img
-									src={thumbnailStore.thumbnails[slide.id]}
-									alt="Slide {i + 1}"
-									class="h-full w-full object-cover"
-								/>
-							{:else}
-								<div class="h-full w-full animate-pulse bg-neutral-800"></div>
-							{/if}
-						</div>
-
-						<!-- Slide number badge -->
-						<div
-							class="absolute right-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-xs text-neutral-300 backdrop-blur"
-						>
-							{i + 1}
-						</div>
-
-						<!-- Edit overlay on hover -->
-						<div
-							class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 transition group-hover:opacity-100"
-						>
-							<span class="text-xs text-white">Edit position</span>
-						</div>
-					</div>
-				{/each}
-
-				<!-- Add Slide card -->
-				<button
-					class="flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
-					onclick={() => onNewSlide(storyboard.current.slides.length - 1)}
+				<span class="text-3xl font-light">+</span>
+				<span class="text-sm">Add first slide</span>
+			</button>
+		{:else}
+			{#each storyboard.current.slides as slide, i (slide.id)}
+				<!-- Slide card -->
+				<div
+					class="group relative shrink-0 cursor-pointer overflow-visible rounded-xl border transition
+						{dragFromIndex === i ? 'border-neutral-600 opacity-40' : ''}
+						{dragOverIndex === i && dragFromIndex !== i
+						? 'border-blue-500 ring-2 ring-blue-500/50'
+						: dragFromIndex === i ? '' : 'border-neutral-800 hover:border-neutral-600'}"
+					style="width: 256px"
+					draggable="true"
+					role="button"
+					tabindex="0"
+					onclick={() => onOpenSlide(i)}
+					onkeydown={(e) => e.key === 'Enter' && onOpenSlide(i)}
+					ondragstart={(e) => onDragStart(e, i)}
+					ondragover={(e) => onDragOver(e, i)}
+					ondrop={(e) => onDrop(e, i)}
+					ondragend={onDragEnd}
 				>
-					<span class="text-2xl font-light">+</span>
-					<span class="text-xs">Add Slide</span>
-				</button>
-			</div>
+					<!-- Insert-before button -->
+					{#if dragFromIndex === null}
+						<button
+							class="absolute -left-4 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-neutral-700 text-sm text-neutral-200 opacity-0 transition hover:bg-neutral-500 group-hover:opacity-100"
+							onclick={(e) => {
+								e.stopPropagation()
+								onNewSlide(i - 1)
+							}}
+							title="Insert slide before"
+						>
+							+
+						</button>
+					{/if}
+
+					<!-- Thumbnail -->
+					<div class="aspect-video w-full overflow-hidden rounded-xl bg-neutral-900">
+						{#if thumbnailStore.thumbnails[slide.id]}
+							<img
+								src={thumbnailStore.thumbnails[slide.id]}
+								alt="Slide {i + 1}"
+								class="h-full w-full object-cover"
+							/>
+						{:else}
+							<div class="h-full w-full animate-pulse bg-neutral-800"></div>
+						{/if}
+					</div>
+
+					<!-- Slide number badge -->
+					<div
+						class="absolute right-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-xs text-neutral-300 backdrop-blur"
+					>
+						{i + 1}
+					</div>
+
+					<!-- Edit hover overlay -->
+					<div
+						class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 transition group-hover:opacity-100"
+					>
+						<span class="text-xs text-white">Edit position</span>
+					</div>
+				</div>
+
+				<!-- Transition arrow (between this slide and the next) -->
+				{#if i < storyboard.current.slides.length - 1}
+					{@const tr = getTransition(storyboard.current.slides[i + 1])}
+					<div class="flex shrink-0 flex-col items-center gap-2 px-3" style="width: 128px">
+						<!-- Arrow -->
+						<svg
+							width="80"
+							height="20"
+							viewBox="0 0 80 20"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+							class="text-neutral-500"
+						>
+							<line x1="0" y1="10" x2="68" y2="10" stroke="currentColor" stroke-width="1.5" />
+							<polyline
+								points="60,4 72,10 60,16"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linejoin="round"
+								stroke-linecap="round"
+							/>
+						</svg>
+
+						<!-- Duration -->
+						<input
+							type="number"
+							min="0.1"
+							step="0.1"
+							value={tr.duration}
+							onchange={(e) => handleDurationChange(i + 1, e.currentTarget.value)}
+							onclick={(e) => e.stopPropagation()}
+							class="w-16 rounded bg-neutral-800 px-2 py-1 text-center text-xs text-neutral-300 focus:outline-none focus:ring-1 focus:ring-neutral-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+							title="Transition duration (seconds)"
+						/>
+
+						<!-- Easing -->
+						<select
+							value={tr.easing}
+							onchange={(e) => handleEasingChange(i + 1, e.currentTarget.value)}
+							onclick={(e) => e.stopPropagation()}
+							class="w-full rounded bg-neutral-800 px-1 py-1 text-center text-xs text-neutral-300 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+						>
+							{#each Object.entries(EASING_LABELS) as [value, label]}
+								<option {value} selected={tr.easing === value}>{label}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
+			{/each}
+
+			<!-- Add Slide card -->
+			<button
+				class="ml-4 flex aspect-video w-48 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
+				onclick={() => onNewSlide(storyboard.current.slides.length - 1)}
+			>
+				<span class="text-2xl font-light">+</span>
+				<span class="text-xs">Add Slide</span>
+			</button>
 		{/if}
 	</div>
 </div>
