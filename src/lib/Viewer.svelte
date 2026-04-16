@@ -209,7 +209,7 @@
 </script>
 
 <div class="relative h-screen w-screen bg-black">
-	<canvas class="h-full w-full" bind:this={canvas}></canvas>
+	<canvas bind:this={canvas} class="h-full w-full"></canvas>
 
 	<div class="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-4">
 		<div>

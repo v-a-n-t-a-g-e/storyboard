@@ -106,16 +106,16 @@
 </script>
 
 <svelte:window
-  ondragenter={handleDragEnter}
-  ondragleave={handleDragLeave}
-  ondragover={handleDragOver}
-  ondrop={handleDrop}
   onbeforeunload={(e) => {
     if (storyboard.dirty) {
       e.preventDefault()
       return ''
     }
   }}
+  ondragenter={handleDragEnter}
+  ondragleave={handleDragLeave}
+  ondragover={handleDragOver}
+  ondrop={handleDrop}
 />
 
 {#if !project.handle}
@@ -127,22 +127,22 @@
   </div>
 {:else if previewOpen}
   <Viewer
+    onCancel={handlePreviewCancel}
+    onPreviewDone={handlePreviewDone}
     previewMode={true}
     slides={storyboard.current.slides}
-    onPreviewDone={handlePreviewDone}
-    onCancel={handlePreviewCancel}
   />
 {:else if viewerOpen}
   <Viewer
     captureMode={true}
     initialCamera={getInitialCamera()}
-    onConfirm={handleViewerConfirm}
     onCancel={handleViewerCancel}
+    onConfirm={handleViewerConfirm}
   />
 {:else}
   <SlideGrid
-    onOpenSlide={handleOpenSlide}
     onNewSlide={handleNewSlide}
+    onOpenSlide={handleOpenSlide}
     onPreview={() => (previewOpen = true)}
   />
 {/if}
