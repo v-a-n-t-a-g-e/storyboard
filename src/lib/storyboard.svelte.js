@@ -1,4 +1,4 @@
-/** @typedef {'ease-in-out'|'ease-in'|'ease-out'|'linear'} Easing */
+/** @typedef {'ease-in-out'|'ease-in'|'ease-out'|'linear'|'continuous'} Easing */
 /** @typedef {{ duration: number, easing: Easing }} Transition */
 /** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string }} Slide */
 /** @typedef {{ name: string, slides: Slide[] }} Storyboard */
@@ -93,6 +93,10 @@ export const storyboard = {
 		const [removed] = slides.splice(fromIndex, 1)
 		const insertAt = toIndex > fromIndex ? toIndex - 1 : toIndex
 		slides.splice(insertAt, 0, removed)
+		// First slide can't be a waypoint — reset if it arrived with continuous
+		if (slides[0].transition?.easing === 'continuous') {
+			slides[0] = { ...slides[0], transition: { ...slides[0].transition, easing: 'ease-in-out' } }
+		}
 		current = { ...current, slides }
 	},
 
