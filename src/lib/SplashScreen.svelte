@@ -55,11 +55,9 @@
 
       <div class=" text-xs text-neutral-600">
         or pick a
-        {#if project.hasNativeFS}
-          <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
-            folder
-          </button>
-        {/if}
+        <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
+          folder
+        </button>
         /
         <button
           class="cursor-pointer underline hover:bg-brand/20"
@@ -76,7 +74,6 @@
   {#if project.recents.length > 0}
     <div class=" flex w-full max-w-100 flex-col items-start space-y-2.5 bg-black p-10 text-white">
       <h2 class="text-xs">Recent Projects</h2>
-
       <div class="flex flex-wrap gap-x-2">
         {#each project.recents as recent, index (index)}
           <button
