@@ -30,6 +30,13 @@
     dragCount = 0
     await project.drop(e)
   }
+
+  function friendlyError(msg) {
+    if (msg.startsWith('Unsupported file type'))
+      return 'Unsupported file type. Only .zip, .glb, and .gltf files are supported.'
+    if (msg.startsWith('Not a valid Vantage project')) return 'Not a valid Vantage project.'
+    return 'Failed to open file.'
+  }
 </script>
 
 <svelte:window
@@ -50,7 +57,16 @@
       ? 'bg-brand/20'
       : ''}"
   >
-    {#if dragCount === 0}
+    {#if project.loading}
+      <p class="text-neutral-600">Opening…</p>
+    {:else if project.error}
+      <div>
+        <p class="text-balance text-pink-600">{friendlyError(project.error)}</p>
+        <button class="cursor-pointer hover:bg-brand/20" onclick={() => project.clearError()}>
+          Try again
+        </button>
+      </div>
+    {:else if dragCount === 0}
       <p class="text-balance">Drop a Vantage project folder, ZIP, or GLB/GLTF file</p>
 
       <div class=" text-xs text-neutral-600">
