@@ -5,6 +5,8 @@
   import { thumbnailStore } from './thumbnails.svelte.js'
   import StoryboardDropdown from './StoryboardDropdown.svelte'
   import SlideCard from './SlideCard.svelte'
+  import ProjectDropdown from './ProjectDropdown.svelte'
+  import StoryboardHeader from './StoryboardHeader.svelte'
 
   let { onOpenSlide, onNewSlide, onPreview } = $props()
 
@@ -62,46 +64,8 @@
   }
 </script>
 
-<div class="flex h-screen w-screen flex-col bg-neutral-950 text-neutral-100">
-  <!-- Top bar -->
-  <div
-    class="relative flex shrink-0 items-center justify-between border-b border-neutral-800 px-4 py-3"
-  >
-    <div class="flex items-center gap-3">
-      <button
-        class="cursor-pointer rounded-md bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-700"
-        onclick={handleBack}
-      >
-        &larr; Close
-      </button>
-
-      <StoryboardDropdown />
-
-      {#if thumbnailStore.generating}
-        <span class="text-xs text-neutral-500">Generating thumbnails…</span>
-      {/if}
-    </div>
-
-    <div class="flex items-center gap-2">
-      {#if (storyboard.current?.slides.length ?? 0) >= 2}
-        <button
-          class="cursor-pointer rounded-md bg-neutral-700 px-3 py-1.5 text-xs text-neutral-200 transition hover:bg-neutral-600"
-          onclick={onPreview}
-        >
-          ▶ Preview
-        </button>
-      {/if}
-      <button
-        class="cursor-pointer rounded-md px-3 py-1.5 text-xs transition
-          {storyboard.dirty
-          ? 'bg-blue-600 text-white hover:bg-blue-500'
-          : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}"
-        onclick={handleSave}
-      >
-        Save{storyboard.dirty ? ' ●' : ''}
-      </button>
-    </div>
-  </div>
+<div class="flex h-screen w-screen flex-col">
+  <StoryboardHeader {onPreview} />
 
   <!-- Slide grid -->
   <div

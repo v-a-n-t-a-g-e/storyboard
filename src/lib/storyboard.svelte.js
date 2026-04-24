@@ -54,7 +54,7 @@ export const storyboard = {
     return all.reduce((a, b) => ((a.lastModified ?? '') >= (b.lastModified ?? '') ? a : b)).id
   },
 
-  /** Create a new storyboard, open it, and save. */
+  /** Create a new storyboard and open it. */
   async createBoard(handle, name) {
     dirty = false
     /** @type {StoryboardData} */
@@ -67,33 +67,53 @@ export const storyboard = {
     all = [...all, board]
     current = board
     currentId = board.id
-    await writeAll(handle)
+    dirty = true
   },
 
   /** Open a storyboard by id (sync — data already loaded). */
   openBoard(id) {
+    syncCurrentToAll()
     const board = all.find((b) => b.id === id)
     if (!board) return
     current = board
     currentId = id
-    dirty = false
   },
 
-  /** Delete a storyboard by id and save. */
+  /** Duplicate a storyboard and open the copy. */
+  async duplicateBoard(handle, id) {
+    const source = all.find((b) => b.id === id)
+    if (!source) return
+    dirty = false
+    /** @type {StoryboardData} */
+    const board = {
+      id: crypto.randomUUID(),
+      name: `${source.name} Copy`,
+      slides: source.slides.map((s) => ({ ...s, id: crypto.randomUUID() })),
+      lastModified: new SvelteDate().toISOString(),
+    }
+    all = [...all, board]
+    current = board
+    currentId = board.id
+    dirty = true
+  },
+
+  /** Delete a storyboard by id. */
   async deleteBoard(handle, id) {
     all = all.filter((b) => b.id !== id)
     if (currentId === id) {
       current = null
       currentId = null
     }
-    await writeAll(handle)
+    // await writeAll(handle)
+    dirty = true
   },
 
-  /** Rename a storyboard and save. */
+  /** Rename a storyboard. */
   async renameBoard(handle, id, name) {
     all = all.map((b) => (b.id === id ? { ...b, name } : b))
     if (currentId === id) current = { ...current, name }
-    await writeAll(handle)
+    // await writeAll(handle)
+    dirty = true
   },
 
   /**
@@ -103,8 +123,9 @@ export const storyboard = {
   async save(handle) {
     if (current && currentId) {
       const now = new SvelteDate().toISOString()
-      all = all.map((b) => (b.id === currentId ? { ...b, ...current, lastModified: now } : b))
+      current = { ...current, lastModified: now }
     }
+    syncCurrentToAll()
     await writeAll(handle)
     dirty = false
   },
@@ -172,6 +193,13 @@ export const storyboard = {
     loading = false
     dirty = false
   },
+}
+
+/** Sync current board state into all (in-memory only, no disk write). */
+function syncCurrentToAll() {
+  if (current && currentId) {
+    all = all.map((b) => (b.id === currentId ? { ...b, ...current } : b))
+  }
 }
 
 /** Write the full storyboards array to storyboards.json. */

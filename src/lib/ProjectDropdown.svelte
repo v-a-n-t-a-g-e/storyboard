@@ -82,7 +82,7 @@
       dropdownOpen = !dropdownOpen
     }}
   >
-    {storyboard.current?.name ?? ''}
+    {project.handle.name} / {storyboard.current?.name ?? ''}
     <span class="text-xs">▾</span>
   </button>
 
@@ -90,19 +90,19 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
-      class="absolute top-full left-0 z-50 mt-1 w-64 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 shadow-xl"
+      class="absolute top-full left-0 z-50 -mx-2.5 mt-1 w-64 overflow-hidden border bg-white"
       onclick={(e) => e.stopPropagation()}
     >
-      <ul class="py-1">
+      <ul>
         {#each storyboard.all as board (board.id)}
           <li
-            class="relative flex items-center gap-1 px-2 py-0.5 {board.id === storyboard.currentId
-              ? 'bg-neutral-800'
+            class="relative flex items-center gap-1 px-2.5 py-1 {board.id === storyboard.currentId
+              ? 'bg-brand/20'
               : ''}"
           >
             {#if renamingId === board.id}
               <input
-                class="flex-1 rounded bg-neutral-700 px-2 py-1 text-sm text-neutral-100 outline-none focus:ring-1 focus:ring-neutral-500"
+                class="flex-1 py-1 outline-none"
                 onblur={commitRename}
                 onkeydown={(e) => {
                   if (e.key === 'Enter') commitRename()
@@ -114,37 +114,33 @@
               />
             {:else}
               <button
-                class="flex-1 cursor-pointer truncate rounded px-2 py-1 text-left text-sm transition hover:bg-neutral-700
-                  {board.id === storyboard.currentId ? 'text-neutral-100' : 'text-neutral-400'}"
+                class="flex-1 cursor-pointer truncate py-1 text-left"
                 onclick={() => handleSwitchBoard(board.id)}
               >
-                {#if board.id === storyboard.currentId}<span class="mr-1 text-blue-400">●</span
-                  >{/if}{board.name}
+                {board.name}
               </button>
             {/if}
             {#if board.id === storyboard.currentId}
               <div class="relative">
                 <button
-                  class="shrink-0 cursor-pointer rounded px-1.5 py-1 text-sm text-neutral-500 transition hover:bg-neutral-700 hover:text-neutral-200"
+                  class="shrink-0 cursor-pointer px-1 py-1 text-neutral-400 hover:text-neutral-700"
                   onclick={(e) => {
                     e.stopPropagation()
                     contextMenuId = contextMenuId === board.id ? null : board.id
                   }}
                 >…</button>
                 {#if contextMenuId === board.id}
-                  <div
-                    class="absolute right-0 top-full z-50 w-36 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl"
-                  >
+                  <div class="absolute right-0 top-full z-50 w-32 border bg-white shadow-md">
                     <button
-                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-neutral-300 transition hover:bg-neutral-800"
+                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm hover:bg-brand/10"
                       onclick={() => startRename(board.id, board.name)}
                     >Rename</button>
                     <button
-                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-neutral-300 transition hover:bg-neutral-800"
+                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm hover:bg-brand/10"
                       onclick={() => handleDuplicateBoard(board.id)}
                     >Duplicate</button>
                     <button
-                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-red-400 transition hover:bg-red-600/20 disabled:cursor-not-allowed disabled:opacity-30"
+                      class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
                       disabled={storyboard.all.length <= 1}
                       onclick={() => handleDeleteBoard(board.id)}
                     >Delete</button>
@@ -155,9 +151,9 @@
           </li>
         {/each}
       </ul>
-      <div class="border-t border-neutral-700 p-2">
+      <div class="border-t p-2">
         <button
-          class="w-full cursor-pointer rounded px-2 py-1.5 text-left text-sm text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-200"
+          class="w-full cursor-pointer px-2.5 py-1 text-left hover:bg-brand/10"
           onclick={handleCreateBoard}
         >+ New storyboard</button>
       </div>
