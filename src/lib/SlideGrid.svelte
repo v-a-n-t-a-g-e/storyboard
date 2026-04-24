@@ -3,9 +3,7 @@
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
-  import StoryboardDropdown from './StoryboardDropdown.svelte'
   import SlideCard from './SlideCard.svelte'
-  import ProjectDropdown from './ProjectDropdown.svelte'
   import StoryboardHeader from './StoryboardHeader.svelte'
 
   let { onOpenSlide, onNewSlide, onPreview } = $props()
@@ -16,18 +14,6 @@
   onMount(() => {
     thumbnailStore.generateAll(project.handle, storyboard.current.slides)
   })
-
-  function handleBack() {
-    if (storyboard.dirty && !confirm('You have unsaved changes. Close the project anyway?')) return
-    thumbnailStore.disposeViewer()
-    storyboard.reset()
-    project.close()
-  }
-
-  async function handleSave() {
-    await storyboard.save(project.handle)
-    await project.save()
-  }
 
   // ── DnD ──────────────────────────────────────────────────────────────────
 
