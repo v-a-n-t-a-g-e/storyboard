@@ -1,8 +1,8 @@
 <script>
   import { SceneViewer } from '@krisenstab/vantage'
-  import { CatmullRomCurve3, Vector3 } from 'three'
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
+  import { buildSegments, lerpCamera, prepareSplineSegment, splineCameraAt } from './cameraPath.js'
   import { onMount } from 'svelte'
 
   let {
@@ -22,19 +22,6 @@
 
   // ── Easing ──────────────────────────────────────────────────────────────────
   const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
-
-  // ── Camera lerp (stop → stop, no waypoints) ─────────────────────────────────
-  function lerpCamera(from, to, t) {
-    return {
-      position: /** @type {[number,number,number]} */ (
-        from.position.map((v, i) => v + (to.position[i] - v) * t)
-      ),
-      target: /** @type {[number,number,number]} */ (
-        from.target.map((v, i) => v + (to.target[i] - v) * t)
-      ),
-      fov: from.fov + (to.fov - from.fov) * t,
-    }
-  }
 
   function rafLoop(durationMs, onTick) {
     return new Promise((resolve) => {
@@ -62,79 +49,13 @@
 
   /**
    * Animate through an array of camera states using a Catmull-Rom spline with
-   * per-segment timing. Each subDurationMs entry controls exactly when the camera
-   * reaches the corresponding control point.
-   * Easing is applied globally (shapes the speed profile of the whole group).
+   * per-segment timing. Easing shapes the speed profile of the whole group.
    */
   function animateSplineWithTiming(cameras, subDurationMs, totalMs, easeFn) {
-    const N = cameras.length
-    const posCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.position)))
-    const tgtCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.target)))
-
-    // Cumulative time fractions: timeFrac[i] = when camera should be at cameras[i]
-    const timeFrac = [0]
-    let cum = 0
-    for (const d of subDurationMs) {
-      cum += d
-      timeFrac.push(cum / totalMs)
-    }
-
-    // Arc-length fractions for each control point.
-    // Control point i sits at raw spline param i/(N-1).
-    // getLengths(D)[k] = cumulative arc length at raw param k/D.
-    const D = Math.max(200, N * 100)
-    const lengths = posCurve.getLengths(D)
-    const totalLen = lengths[lengths.length - 1]
-    const arcFrac = [0]
-    for (let i = 1; i < N - 1; i++) {
-      arcFrac.push(lengths[Math.round((i / (N - 1)) * D)] / totalLen)
-    }
-    arcFrac.push(1.0)
-
-    const fovStart = cameras[0].fov
-    const fovEnd = cameras[N - 1].fov
-
+    const prepared = prepareSplineSegment(cameras, subDurationMs)
     return rafLoop(totalMs, (raw) => {
-      const t = easeFn(raw) // global easing applied to time
-      let seg = 0
-      while (seg < N - 2 && t >= timeFrac[seg + 1]) seg++
-      const span = timeFrac[seg + 1] - timeFrac[seg]
-      const tLocal = span > 0 ? (t - timeFrac[seg]) / span : 1
-      const u = Math.max(0, Math.min(1, arcFrac[seg] + tLocal * (arcFrac[seg + 1] - arcFrac[seg])))
-      const pos = posCurve.getPointAt(u)
-      const tgt = tgtCurve.getPointAt(u)
-      viewer.setCameraState({
-        position: /** @type {[number,number,number]} */ ([pos.x, pos.y, pos.z]),
-        target: /** @type {[number,number,number]} */ ([tgt.x, tgt.y, tgt.z]),
-        fov: fovStart + (fovEnd - fovStart) * t,
-      })
+      viewer.setCameraState(splineCameraAt(prepared, easeFn(raw)))
     })
-  }
-
-  /**
-   * Group slides into segments delimited by stop slides.
-   * Returns arrays of slide objects: each group starts and ends with a stop.
-   * e.g. [Stop, WP, WP, Stop] and [Stop, Stop]
-   */
-  /**
-   * Group slides into segments delimited by stops.
-   * A slide is a waypoint (not a stop) if its outgoing transition easing is 'continuous'.
-   * A segment closes when we encounter a stop at i > groupStart; slide i is included
-   * in the closing segment and also begins the next one.
-   */
-  function buildSegments(slides) {
-    const N = slides.length
-    const segments = []
-    let groupStart = 0
-    for (let i = 0; i < N - 1; i++) {
-      if (!slides[i].transition?.continuous && i > groupStart) {
-        segments.push(slides.slice(groupStart, i + 1))
-        groupStart = i
-      }
-    }
-    // Always flush remaining slides (last slide is always a stop)
-    segments.push(slides.slice(groupStart))
-    return segments
   }
 
   async function startPreview() {

@@ -5,12 +5,14 @@
   import SplashScreen from './lib/SplashScreen.svelte'
   import SlideGrid from './lib/SlideGrid.svelte'
   import Viewer from './lib/Viewer.svelte'
+  import ScrollyPreview from './lib/ScrollyPreview.svelte'
 
   // Viewer navigation state
   let viewerOpen = $state(false)
   let viewerMode = $state('new') // 'new' | 'edit'
   let viewerSlideIndex = $state(null)
-  let previewOpen = $state(false)
+  /** @type {'time' | 'scroll' | null} */
+  let previewKind = $state(null)
 
   // Auto-open last modified storyboard when a project is opened
   $effect(() => {
@@ -55,11 +57,11 @@
   }
 
   function handlePreviewDone() {
-    previewOpen = false
+    previewKind = null
   }
 
   function handlePreviewCancel() {
-    previewOpen = false
+    previewKind = null
   }
 
   // Reset viewer state when storyboard is cleared
@@ -68,7 +70,7 @@
       viewerOpen = false
       viewerSlideIndex = null
       viewerMode = 'new'
-      previewOpen = false
+      previewKind = null
     }
   })
 
@@ -96,11 +98,16 @@
   <div class="flex h-screen w-screen items-center justify-center bg-neutral-950">
     <span class="text-sm text-neutral-600">Opening…</span>
   </div>
-{:else if previewOpen}
+{:else if previewKind === 'time'}
   <Viewer
     onCancel={handlePreviewCancel}
     onPreviewDone={handlePreviewDone}
     previewMode={true}
+    slides={storyboard.current.slides}
+  />
+{:else if previewKind === 'scroll'}
+  <ScrollyPreview
+    onCancel={handlePreviewCancel}
     slides={storyboard.current.slides}
   />
 {:else if viewerOpen}
@@ -114,6 +121,6 @@
   <SlideGrid
     onNewSlide={handleNewSlide}
     onOpenSlide={handleOpenSlide}
-    onPreview={() => (previewOpen = true)}
+    onPreview={(kind) => (previewKind = kind)}
   />
 {/if}

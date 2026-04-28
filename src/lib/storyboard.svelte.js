@@ -178,6 +178,13 @@ export const storyboard = {
     dirty = true
   },
 
+  /** Update the description of the slide at `index`. */
+  updateDescription(index, description) {
+    const slides = current.slides.map((s, i) => (i === index ? { ...s, description } : s))
+    current = { ...current, slides }
+    dirty = true
+  },
+
   /**
    * Move the slide at `fromIndex` to insertion position `insertAt` (0–N).
    * Resets `continuous` easing on the new first slide if needed.
