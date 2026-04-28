@@ -1,5 +1,4 @@
-/** @typedef {'ease-in-out'|'ease-in'|'ease-out'|'linear'|'continuous'} Easing */
-/** @typedef {{ duration: number, easing: Easing }} Transition */
+/** @typedef {{ duration: number, vh: number, continuous: boolean }} Transition */
 /** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string }} Slide */
 /** @typedef {{ id: string, name: string, slides: Slide[], lastModified?: string }} StoryboardData */
 
@@ -38,7 +37,7 @@ export const storyboard = {
       try {
         const file = await handle.fs.readFile(STORE_PATH)
         const data = JSON.parse(await file.text())
-        all = data.storyboards ?? []
+        all = (data.storyboards ?? []).map(migrateBoard)
       } catch {
         // Try migrating from old per-file format
         all = await migrateFromOldFormat(handle)
@@ -136,7 +135,7 @@ export const storyboard = {
     const slide = {
       id: crypto.randomUUID(),
       camera,
-      transition: { duration: 1, easing: 'ease-in-out' },
+      transition: { duration: 1, vh: 30, continuous: false },
       title: '',
       description: '',
     }
@@ -145,6 +144,17 @@ export const storyboard = {
     current = { ...current, slides }
     dirty = true
     return slide
+  },
+
+  /** Duplicate the slide at `index`, inserting the copy immediately after it. Returns the new slide id. */
+  duplicateSlide(index) {
+    const source = current.slides[index]
+    const copy = { ...source, id: crypto.randomUUID() }
+    const slides = [...current.slides]
+    slides.splice(index + 1, 0, copy)
+    current = { ...current, slides }
+    dirty = true
+    return copy.id
   },
 
   /** Delete the slide at `index`. */
@@ -178,8 +188,8 @@ export const storyboard = {
     const adjusted = insertAt > fromIndex ? insertAt - 1 : insertAt
     slides.splice(adjusted, 0, removed)
     // First slide can't be a waypoint
-    if (slides[0].transition?.easing === 'continuous') {
-      slides[0] = { ...slides[0], transition: { ...slides[0].transition, easing: 'ease-in-out' } }
+    if (slides[0].transition?.continuous) {
+      slides[0] = { ...slides[0], transition: { ...slides[0].transition, continuous: false } }
     }
     current = { ...current, slides }
     dirty = true
@@ -205,6 +215,18 @@ function syncCurrentToAll() {
 /** Write the full storyboards array to storyboards.json. */
 async function writeAll(handle) {
   await handle.fs.writeFile(STORE_PATH, JSON.stringify({ storyboards: all }, null, 2))
+}
+
+/** Migrate a board's slide transitions from the old easing-string format to the new boolean format. */
+function migrateBoard(board) {
+  return {
+    ...board,
+    slides: board.slides.map((s) => {
+      if (!s.transition || typeof s.transition.continuous === 'boolean') return s
+      const { easing, ...rest } = s.transition
+      return { ...s, transition: { ...rest, continuous: easing === 'continuous' } }
+    }),
+  }
 }
 
 /** Attempt to migrate from the old per-file format. Returns [] if not found. */

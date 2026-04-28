@@ -127,23 +127,23 @@
                   onclick={(e) => {
                     e.stopPropagation()
                     contextMenuId = contextMenuId === board.id ? null : board.id
-                  }}
-                >…</button>
+                  }}>…</button
+                >
                 {#if contextMenuId === board.id}
-                  <div class="absolute right-0 top-full z-50 w-32 border bg-white shadow-md">
+                  <div class="absolute top-full right-0 z-50 w-32 border bg-white shadow-md">
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm hover:bg-brand/10"
-                      onclick={() => startRename(board.id, board.name)}
-                    >Rename</button>
+                      onclick={() => startRename(board.id, board.name)}>Rename</button
+                    >
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm hover:bg-brand/10"
-                      onclick={() => handleDuplicateBoard(board.id)}
-                    >Duplicate</button>
+                      onclick={() => handleDuplicateBoard(board.id)}>Duplicate</button
+                    >
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
                       disabled={storyboard.all.length <= 1}
-                      onclick={() => handleDeleteBoard(board.id)}
-                    >Delete</button>
+                      onclick={() => handleDeleteBoard(board.id)}>Delete</button
+                    >
                   </div>
                 {/if}
               </div>
@@ -154,8 +154,8 @@
       <div class="border-t p-2">
         <button
           class="w-full cursor-pointer px-2.5 py-1 text-left hover:bg-brand/10"
-          onclick={handleCreateBoard}
-        >+ New storyboard</button>
+          onclick={handleCreateBoard}>+ New storyboard</button
+        >
       </div>
     </div>
   {/if}

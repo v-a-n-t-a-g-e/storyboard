@@ -21,12 +21,7 @@
   let stopRequested = false
 
   // ── Easing ──────────────────────────────────────────────────────────────────
-  const EASINGS = {
-    'ease-in-out': (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2),
-    'ease-in': (t) => t * t * t,
-    'ease-out': (t) => 1 - (1 - t) ** 3,
-    linear: (t) => t,
-  }
+  const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
   // ── Camera lerp (stop → stop, no waypoints) ─────────────────────────────────
   function lerpCamera(from, to, t) {
@@ -132,8 +127,7 @@
     const segments = []
     let groupStart = 0
     for (let i = 0; i < N - 1; i++) {
-      const easing = slides[i].transition?.easing ?? 'ease-in-out'
-      if (easing !== 'continuous' && i > groupStart) {
+      if (!slides[i].transition?.continuous && i > groupStart) {
         segments.push(slides.slice(groupStart, i + 1))
         groupStart = i
       }
@@ -160,8 +154,7 @@
       const subDurMs = group.slice(0, -1).map((s) => (s.transition?.duration ?? 1) * 1000)
       const totalMs = subDurMs.reduce((a, b) => a + b, 0)
 
-      // Easing comes from the first slide's departure (always a real easing, never 'continuous')
-      const easeFn = EASINGS[group[0].transition?.easing ?? 'ease-in-out'] ?? EASINGS['ease-in-out']
+      const easeFn = easeInOut
 
       if (cameras.length === 2) {
         // Simple stop-to-stop: linear lerp with easing

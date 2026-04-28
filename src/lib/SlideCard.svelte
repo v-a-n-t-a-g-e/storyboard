@@ -5,7 +5,6 @@
   let {
     slide,
     index,
-    isFirst,
     isLast,
     totalSlides,
     dragFromIndex,
@@ -18,16 +17,8 @@
     onDragEnd,
   } = $props()
 
-  const EASING_LABELS = {
-    'ease-in-out': 'Ease In-Out',
-    'ease-in': 'Ease In',
-    'ease-out': 'Ease Out',
-    linear: 'Linear',
-    continuous: 'Continuous',
-  }
-
   function getTransition(s) {
-    return s.transition ?? { duration: 1, easing: 'ease-in-out' }
+    return s.transition ?? { duration: 1, vh: 30, continuous: false }
   }
 
   function handleDurationChange(raw) {
@@ -36,18 +27,23 @@
     storyboard.updateTransition(index, { ...t, duration })
   }
 
-  function handleEasingChange(easing) {
+  function handleVhChange(raw) {
+    const vh = Math.max(1, parseInt(raw) || 30)
     const t = getTransition(storyboard.current.slides[index])
-    storyboard.updateTransition(index, { ...t, easing })
+    storyboard.updateTransition(index, { ...t, vh })
+  }
+
+  function toggleContinuous() {
+    const t = getTransition(storyboard.current.slides[index])
+    storyboard.updateTransition(index, { ...t, continuous: !t.continuous })
   }
 
   const tr = $derived(getTransition(slide))
-  const isContinuous = $derived(tr.easing === 'continuous')
+  const isContinuous = $derived(tr.continuous)
 </script>
 
 <div
-  style="width: 256px"
-  class="group relative shrink-0 overflow-visible rounded-xl border transition
+  class="group relative shrink-0 flex-col overflow-visible transition hover:bg-brand/5
     {dragFromIndex === index ? 'cursor-grabbing opacity-40' : 'cursor-pointer'}
     border-neutral-800 {dragFromIndex === null ? 'hover:border-neutral-600' : ''}"
   draggable="true"
@@ -62,110 +58,122 @@
 >
   <!-- Drop line: before this card -->
   {#if dropPosition === index && dragFromIndex !== index && dragFromIndex !== index - 1}
-    <div
-      class="pointer-events-none absolute inset-y-0 -left-2.5 z-20 w-0.5 rounded bg-blue-500"
-    ></div>
+    <div class="pointer-events-none absolute inset-y-0 -left-2.5 z-20 w-px bg-brand"></div>
   {/if}
   <!-- Drop line: after last card -->
   {#if isLast && dropPosition === totalSlides && dragFromIndex !== totalSlides - 1}
-    <div
-      class="pointer-events-none absolute inset-y-0 -right-2.5 z-20 w-0.5 rounded bg-blue-500"
-    ></div>
+    <div class="pointer-events-none absolute inset-y-0 -right-2.5 z-20 w-px bg-brand"></div>
   {/if}
 
-  <!-- Insert-before button -->
-  {#if dragFromIndex === null}
-    <button
-      class="absolute top-1/2 -left-4 z-10 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-neutral-700 text-sm text-neutral-200 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-500"
-      onclick={(e) => {
-        e.stopPropagation()
-        onNewSlide(index - 1)
-      }}
-      title="Insert slide before">+</button
-    >
-  {/if}
-
-  <!-- Thumbnail -->
-  <div class="aspect-video w-full overflow-hidden rounded-t-xl bg-neutral-900">
-    {#if thumbnailStore.thumbnails[slide.id]}
-      <img
-        class="h-full w-full object-cover"
-        alt="Slide {index + 1}"
-        draggable="false"
-        src={thumbnailStore.thumbnails[slide.id]}
-      />
-    {:else}
-      <div class="h-full w-full animate-pulse bg-neutral-800"></div>
-    {/if}
-  </div>
-
-  <!-- Slide number badge -->
-  <div
-    class="absolute top-2 right-2 rounded bg-black/60 px-1.5 py-0.5 text-xs text-neutral-300 backdrop-blur"
-  >
-    {index + 1}
-  </div>
-
-  <!-- Delete button -->
-  <button
-    class="absolute top-2 left-2 z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-xs text-neutral-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-600/80 hover:text-white"
-    onclick={(e) => {
-      e.stopPropagation()
-      storyboard.deleteSlide(index)
-    }}
-    title="Delete slide">×</button
-  >
-
-  <!-- Edit hover overlay (thumbnail area only) -->
-  <div
-    class="pointer-events-none absolute inset-x-0 top-0 flex aspect-video items-center justify-center rounded-t-xl bg-black/40 opacity-0 transition group-hover:opacity-100"
-  >
-    <span class="text-xs text-white">Edit position</span>
-  </div>
-
-  <!-- Transition footer -->
-  {#if !isLast}
+  <div class="flex items-center justify-center framed-2.5 p-2.5" class:mt-12.5={isContinuous}>
+    <!-- Thumbnail -->
     <div
-      class="flex items-center gap-2 rounded-b-xl border-t px-2 py-1.5 transition-colors
-        {isContinuous
-        ? 'border-violet-800/60 bg-violet-950/40'
-        : 'border-neutral-800 bg-neutral-900'}"
+      class="aspect-auto h-50 w-50 overflow-hidden bg-neutral-900"
+      class:h-25!={isContinuous}
+      class:w-25!={isContinuous}
     >
-      <input
-        class="w-14 [appearance:textfield] rounded bg-neutral-800 px-1.5 py-0.5 text-center text-xs text-neutral-300 focus:ring-1 focus:ring-neutral-600 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        min="0.1"
-        onchange={(e) => {
-          e.stopPropagation()
-          handleDurationChange(e.currentTarget.value)
-        }}
-        onclick={(e) => e.stopPropagation()}
-        step="0.1"
-        title="Duration (seconds)"
-        type="number"
-        value={tr.duration}
-      />
-      <select
-        class="flex-1 rounded bg-neutral-800 px-1 py-0.5 text-xs focus:ring-1 focus:ring-neutral-600 focus:outline-none
-          {isContinuous ? 'text-violet-300' : 'text-neutral-300'}"
-        onchange={(e) => {
-          e.stopPropagation()
-          handleEasingChange(e.currentTarget.value)
-        }}
-        onclick={(e) => e.stopPropagation()}
-        value={tr.easing}
+      {#if thumbnailStore.thumbnails[slide.id]}
+        <img
+          class="h-full w-full object-cover"
+          alt="Slide {index + 1}"
+          draggable="false"
+          src={thumbnailStore.thumbnails[slide.id]}
+        />
+      {:else}
+        <div class="h-full w-full animate-pulse bg-neutral-800"></div>
+      {/if}
+    </div>
+
+    <!-- Transition -->
+    <div
+      class="flex h-full w-25 flex-col items-center justify-center gap-1 px-2 py-1.5 transition-colors"
+    >
+      {#if !isLast}
+        <div class="flex items-center bg-time/10 px-2 py-1">
+          <span class="w-5 text-xs text-time">s</span>
+          <input
+            class="w-10 [appearance:textfield] px-1 py-0.5 text-right text-xs text-black focus:bg-white focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            min="0.1"
+            onchange={(e) => {
+              e.stopPropagation()
+              handleDurationChange(e.currentTarget.value)
+            }}
+            onclick={(e) => e.stopPropagation()}
+            step="0.1"
+            title="Duration (seconds)"
+            type="number"
+            value={tr.duration}
+          />
+        </div>
+      {/if}
+      <svg
+        class="overflow-visible {!isLast ? 'cursor-pointer' : ''}"
+        height="20"
+        onclick={!isLast
+          ? (e) => {
+              e.stopPropagation()
+              toggleContinuous()
+            }
+          : undefined}
+        role={!isLast ? 'button' : undefined}
+        title={!isLast
+          ? isContinuous
+            ? 'Continuous (click to use transition)'
+            : 'Transition (click for continuous)'
+          : undefined}
+        width="100"
       >
-        {#each Object.entries(EASING_LABELS) as [value, label] (value)}
-          <option
-            disabled={isFirst && value === 'continuous'}
-            selected={tr.easing === value}
-            {value}>{label}</option
-          >
-        {/each}
-      </select>
+        <path d="M0,10 L110,10" fill="none" stroke="currentColor"></path>
+        {#if !isLast}
+          <path d="M102.5,2.5 L110,10 L102.5,17.5" fill="none" stroke="currentColor"></path>
+        {:else}
+          <path d="M110,2.5 L110,17.5" fill="none" stroke="currentColor"></path>
+        {/if}
+      </svg>
+      {#if !isLast}
+        <div class="flex items-center bg-scroll/10 px-2 py-1">
+          <span class="w-5 text-xs text-scroll">vh</span>
+          <input
+            class="w-10 [appearance:textfield] px-1 py-0.5 text-right text-xs text-black focus:bg-white focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            min="1"
+            onchange={(e) => {
+              e.stopPropagation()
+              handleVhChange(e.currentTarget.value)
+            }}
+            onclick={(e) => e.stopPropagation()}
+            step="1"
+            title="Scroll distance (vh)"
+            type="number"
+            value={tr.vh ?? 30}
+          />
+        </div>
+      {/if}
     </div>
-  {:else}
-    <div class="rounded-b-xl border-t border-neutral-800 bg-neutral-900 px-2 py-1.5">
-      <span class="text-xs text-neutral-700">— end —</span>
+  </div>
+  <!-- <div class="-mt-px flex w-full justify-between framed-2.5 p-2.5 text-xs">
+    <div></div>
+    <div>
+      <button
+        class="hover:underline"
+        onclick={(e) => {
+          e.stopPropagation()
+          const newId = storyboard.duplicateSlide(index)
+          if (newId && thumbnailStore.thumbnails[slide.id]) {
+            thumbnailStore.thumbnails[newId] = thumbnailStore.thumbnails[slide.id]
+          }
+        }}>Duplicate</button
+      >
+      |
+      <button
+        class="hover:text-pink-600 hover:underline"
+        onclick={(e) => {
+          e.stopPropagation()
+          storyboard.deleteSlide(index)
+        }}>Delete</button
+      >
     </div>
+  </div> -->
+  {#if !isContinuous}
+    <div class="-mt-px h-25 w-full framed-2.5 p-2.5">Description</div>
   {/if}
 </div>

@@ -39,7 +39,6 @@
   }
 
   async function handleDeleteBoard(id) {
-    if (storyboard.all.length <= 1) return
     contextMenuId = null
     await storyboard.deleteBoard(project.handle, id)
     if (!storyboard.current) {
@@ -47,6 +46,10 @@
       if (next) {
         storyboard.openBoard(next)
         thumbnailStore.generateAll(project.handle, storyboard.current.slides)
+      } else {
+        await storyboard.createBoard(project.handle, 'Untitled')
+        renamingId = storyboard.currentId
+        renameValue = 'Untitled'
       }
     }
   }
@@ -129,25 +132,24 @@
                   onclick={(e) => {
                     e.stopPropagation()
                     contextMenuId = contextMenuId === board.id ? null : board.id
-                  }}
-                >…</button>
+                  }}>…</button
+                >
                 {#if contextMenuId === board.id}
                   <div
-                    class="absolute right-0 top-full z-50 w-36 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl"
+                    class="absolute top-full right-0 z-50 w-36 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900 shadow-xl"
                   >
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-neutral-300 transition hover:bg-neutral-800"
-                      onclick={() => startRename(board.id, board.name)}
-                    >Rename</button>
+                      onclick={() => startRename(board.id, board.name)}>Rename</button
+                    >
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-neutral-300 transition hover:bg-neutral-800"
-                      onclick={() => handleDuplicateBoard(board.id)}
-                    >Duplicate</button>
+                      onclick={() => handleDuplicateBoard(board.id)}>Duplicate</button
+                    >
                     <button
                       class="w-full cursor-pointer px-3 py-1.5 text-left text-sm text-red-400 transition hover:bg-red-600/20 disabled:cursor-not-allowed disabled:opacity-30"
-                      disabled={storyboard.all.length <= 1}
-                      onclick={() => handleDeleteBoard(board.id)}
-                    >Delete</button>
+                      onclick={() => handleDeleteBoard(board.id)}>Delete</button
+                    >
                   </div>
                 {/if}
               </div>
@@ -158,8 +160,8 @@
       <div class="border-t border-neutral-700 p-2">
         <button
           class="w-full cursor-pointer rounded px-2 py-1.5 text-left text-sm text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-200"
-          onclick={handleCreateBoard}
-        >+ New storyboard</button>
+          onclick={handleCreateBoard}>+ New storyboard</button
+        >
       </div>
     </div>
   {/if}

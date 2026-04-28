@@ -29,13 +29,16 @@
   }
 
   async function handleDeleteBoard(id) {
-    if (storyboard.all.length <= 1) return
     await storyboard.deleteBoard(project.handle, id)
     if (!storyboard.current) {
       const next = storyboard.latestId()
       if (next) {
         storyboard.openBoard(next)
         thumbnailStore.generateAll(project.handle, storyboard.current.slides)
+      } else {
+        await storyboard.createBoard(project.handle, 'Untitled')
+        renamingId = storyboard.currentId
+        renameValue = 'Untitled'
       }
     }
   }
@@ -87,7 +90,15 @@
     </button>
     <div class="h-px flex-1 bg-black"></div>
     <button
-      class="flex cursor-pointer items-center gap-1.5 px-1 hover:bg-brand/20 disabled:pointer-events-none disabled:text-neutral-300"
+      class="flex cursor-pointer items-center gap-1.5 px-1 text-time hover:bg-time/20 disabled:pointer-events-none disabled:text-neutral-300"
+      disabled={(storyboard.current?.slides.length ?? 0) < 2}
+      onclick={onPreview}
+    >
+      <span class="text-xs">▶</span> Preview
+    </button>
+    <div class="h-px w-5 bg-black"></div>
+    <button
+      class="flex cursor-pointer items-center gap-1.5 px-1 text-scroll hover:bg-scroll/20 disabled:pointer-events-none disabled:text-neutral-300"
       disabled={(storyboard.current?.slides.length ?? 0) < 2}
       onclick={onPreview}
     >
@@ -115,6 +126,25 @@
         </button>
       </div>
 
+      <div class="flex min-w-48 flex-col items-start gap-1.5">
+        <span class="px-1.5 text-xs text-neutral-600">Export</span>
+        <button
+          class="cursor-pointer px-1.5 text-time hover:bg-time/20"
+          onclick={handleCreateBoard}
+        >
+          Slideshow
+        </button>
+        <button
+          class="cursor-pointer px-1.5 text-scroll hover:bg-scroll/20"
+          onclick={handleCreateBoard}
+        >
+          Scrollytelling
+        </button>
+        <button class="cursor-pointer px-1.5 hover:bg-brand/20" onclick={handleCreateBoard}>
+          Camera
+        </button>
+      </div>
+
       <div class="flex flex-col items-start gap-1.5">
         <span class="px-1.5 text-xs text-neutral-600">Storyboards</span>
         <ul class="flex flex-wrap gap-2">
@@ -138,9 +168,7 @@
                   {:else}
                     <span class="overflow-hidden text-nowrap text-ellipsis">{board.name}</span>
                   {/if}
-                  <div
-                    class="flex gap-1 text-xs text-[color-mix(in_srgb,var(--color-brand)_40%,black)]"
-                  >
+                  <div class="flex gap-1 text-xs text-brand-deep">
                     <button
                       class="cursor-pointer hover:text-black hover:underline"
                       onclick={() => startRename(board.id, board.name)}>Rename</button
@@ -152,8 +180,7 @@
                     >
                     <span>|</span>
                     <button
-                      class="cursor-pointer hover:text-pink-600 hover:underline disabled:cursor-not-allowed disabled:opacity-30"
-                      disabled={storyboard.all.length <= 1}
+                      class="cursor-pointer hover:text-pink-600 hover:underline"
                       onclick={() => handleDeleteBoard(board.id)}>Delete</button
                     >
                   </div>

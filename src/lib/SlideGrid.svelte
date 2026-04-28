@@ -56,7 +56,7 @@
   <!-- Slide grid -->
   <div
     style="scrollbar-color: #404040 transparent;"
-    class="flex flex-wrap content-start gap-4 overflow-y-auto p-8"
+    class="flex flex-wrap content-start gap-5 overflow-y-auto px-10 py-5"
   >
     {#if storyboard.current?.slides.length === 0}
       <button
@@ -88,11 +88,16 @@
 
       <!-- Add Slide card -->
       <button
-        class="flex aspect-video w-48 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 self-start rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
+        class="group shrink-0 cursor-pointer flex-col text-neutral-700 transition hover:text-neutral-400 self-start"
         onclick={() => onNewSlide(slides.length - 1)}
       >
-        <span class="text-2xl font-light">+</span>
-        <span class="text-xs">Add Slide</span>
+        <div class="flex framed-2.5 p-2.5">
+          <div class="flex h-50 w-50 flex-col items-center justify-center gap-2 bg-neutral-900">
+            <span class="text-2xl font-light">+</span>
+            <span class="text-xs">Add Slide</span>
+          </div>
+        </div>
+        <div class="-mt-px h-25 w-full framed-2.5"></div>
       </button>
     {/if}
   </div>
