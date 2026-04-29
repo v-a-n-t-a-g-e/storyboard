@@ -1,5 +1,6 @@
 /** @typedef {{ duration: number, vh: number, continuous: boolean }} Transition */
-/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string }} Slide */
+/** @typedef {{ objects?: Record<string, boolean>, projections?: Record<string, boolean> }} VisibilityOverrides */
+/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string, visibility?: VisibilityOverrides, projectionRef?: string | null }} Slide */
 /** @typedef {{ id: string, name: string, slides: Slide[], lastModified?: string }} StoryboardData */
 
 import { SvelteDate } from 'svelte/reactivity'
@@ -129,15 +130,22 @@ export const storyboard = {
     dirty = false
   },
 
-  /** Insert a new slide after `afterIndex` (-1 to prepend). Returns the new slide. */
-  insertSlide(afterIndex, camera) {
+  /**
+   * Insert a new slide after `afterIndex` (-1 to prepend). `payload` may be either a
+   * camera object (legacy) or a partial slide `{ camera, visibility?, projectionRef? }`.
+   * Returns the new slide.
+   */
+  insertSlide(afterIndex, payload) {
+    const patch = payload && 'camera' in payload ? payload : { camera: payload }
     /** @type {Slide} */
     const slide = {
       id: crypto.randomUUID(),
-      camera,
+      camera: patch.camera,
       transition: { duration: 1, vh: 30, continuous: false },
       title: '',
       description: '',
+      ...(patch.visibility ? { visibility: patch.visibility } : {}),
+      ...(patch.projectionRef ? { projectionRef: patch.projectionRef } : {}),
     }
     const slides = [...current.slides]
     slides.splice(afterIndex + 1, 0, slide)
@@ -171,9 +179,21 @@ export const storyboard = {
     dirty = true
   },
 
-  /** Update the camera of the slide at `index`. */
-  updateSlide(index, camera) {
-    const slides = current.slides.map((s, i) => (i === index ? { ...s, camera } : s))
+  /**
+   * Update the slide at `index`. `payload` may be a camera object (legacy) or a
+   * partial slide `{ camera?, visibility?, projectionRef? }`. `projectionRef: null`
+   * clears the link.
+   */
+  updateSlide(index, payload) {
+    const patch = payload && 'camera' in payload ? payload : { camera: payload }
+    const slides = current.slides.map((s, i) => {
+      if (i !== index) return s
+      const next = { ...s }
+      if (patch.camera) next.camera = patch.camera
+      if (patch.visibility !== undefined) next.visibility = patch.visibility
+      if (patch.projectionRef !== undefined) next.projectionRef = patch.projectionRef
+      return next
+    })
     current = { ...current, slides }
     dirty = true
   },
