@@ -42,35 +42,56 @@
   const isContinuous = $derived(tr.continuous)
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="group relative shrink-0 flex-col overflow-visible transition hover:bg-brand/5
+  class="group card relative shrink-0 flex-col overflow-visible transition
     {dragFromIndex === index ? 'cursor-grabbing opacity-40' : 'cursor-pointer'}
     border-neutral-800 {dragFromIndex === null ? 'hover:border-neutral-600' : ''}"
   draggable="true"
-  onclick={() => onOpenSlide(index)}
   ondragend={onDragEnd}
   ondragover={(e) => onDragOver(e, index)}
   ondragstart={(e) => onDragStart(e, index)}
   ondrop={onDrop}
-  onkeydown={(e) => e.key === 'Enter' && onOpenSlide(index)}
-  role="button"
-  tabindex="0"
 >
   <!-- Drop line: before this card -->
   {#if dropPosition === index && dragFromIndex !== index && dragFromIndex !== index - 1}
-    <div class="pointer-events-none absolute inset-y-0 -left-2.5 z-20 w-px bg-brand"></div>
+    <div class="pointer-events-none absolute inset-y-0 -left-2.5 z-20 h-55 w-px bg-brand"></div>
   {/if}
   <!-- Drop line: after last card -->
   {#if isLast && dropPosition === totalSlides && dragFromIndex !== totalSlides - 1}
-    <div class="pointer-events-none absolute inset-y-0 -right-2.5 z-20 w-px bg-brand"></div>
+    <div class="pointer-events-none absolute inset-y-0 -right-2.5 z-20 h-55 w-px bg-brand"></div>
   {/if}
 
-  <div class="flex items-center justify-center framed-2.5 p-2.5" class:mt-12.5={isContinuous}>
+  <div class="flex items-center justify-center framed-2.5 p-2.5" class:m-12.5={isContinuous}>
+    <button
+      class="absolute left-0 -translate-x-5 cursor-pointer text-neutral-200 hover:text-black"
+      class:text-brand!={isContinuous}
+      onclick={!isLast
+        ? (e) => {
+            e.stopPropagation()
+            toggleContinuous()
+          }
+        : undefined}
+      title={!isLast
+        ? isContinuous
+          ? 'Continuous (click to use transition)'
+          : 'Transition (click for continuous)'
+        : undefined}
+    >
+      <svg height="20" width="30">
+        <path d="M5,2.5 L12.5,10 L5,17.5" fill="none" stroke="currentColor"></path>
+        <path d="M17.5,2.5 L25,10 L17.5,17.5" fill="none" stroke="currentColor"></path>
+      </svg>
+    </button>
     <!-- Thumbnail -->
     <div
       class="aspect-auto h-50 w-50 overflow-hidden bg-neutral-900"
       class:h-25!={isContinuous}
       class:w-25!={isContinuous}
+      onclick={() => onOpenSlide(index)}
+      onkeydown={(e) => e.key === 'Enter' && onOpenSlide(index)}
+      role="button"
+      tabindex="0"
     >
       {#if thumbnailStore.thumbnails[slide.id]}
         <img
@@ -123,7 +144,52 @@
           : undefined}
         width="100"
       >
-        <path d="M0,10 L110,10" fill="none" stroke="currentColor"></path>
+        {#if isContinuous}
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-12.5)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-25)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-37.5)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-50)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-62.5)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-75)"
+          ></path>
+          <path
+            d="M102.5,2.5 L110,10 L102.5,17.5"
+            fill="none"
+            stroke="currentColor"
+            transform="translate(-87.5)"
+          ></path>
+        {:else}
+          <path d="M0,10 L110,10" fill="none" stroke="currentColor"></path>
+        {/if}
         {#if !isLast}
           <path d="M102.5,2.5 L110,10 L102.5,17.5" fill="none" stroke="currentColor"></path>
         {:else}
