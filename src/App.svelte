@@ -38,13 +38,14 @@
     viewerOpen = true
   }
 
-  function handleViewerConfirm(camera) {
+  function handleViewerConfirm(payload) {
+    const { camera } = payload
     if (viewerMode === 'new') {
-      const slide = storyboard.insertSlide(viewerSlideIndex, camera)
+      const slide = storyboard.insertSlide(viewerSlideIndex, payload)
       thumbnailStore.generateOne(project.handle, slide.id, camera)
     } else {
       const slide = storyboard.current.slides[viewerSlideIndex]
-      storyboard.updateSlide(viewerSlideIndex, camera)
+      storyboard.updateSlide(viewerSlideIndex, payload)
       thumbnailStore.generateOne(project.handle, slide.id, camera)
     }
     viewerOpen = false
@@ -78,6 +79,13 @@
     }
     return storyboard.current?.slides.at(-1)?.camera ?? null
   }
+
+  function getInitialSlide() {
+    if (viewerMode === 'edit') {
+      return storyboard.current?.slides[viewerSlideIndex] ?? null
+    }
+    return null
+  }
 </script>
 
 <svelte:window
@@ -107,6 +115,7 @@
   <Viewer
     captureMode={true}
     initialCamera={getInitialCamera()}
+    initialSlide={getInitialSlide()}
     onCancel={handleViewerCancel}
     onConfirm={handleViewerConfirm}
   />
