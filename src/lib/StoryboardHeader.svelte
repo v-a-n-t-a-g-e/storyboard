@@ -92,7 +92,7 @@
     <button
       class="flex cursor-pointer items-center gap-1.5 px-1 text-time hover:bg-time/20 disabled:pointer-events-none disabled:text-neutral-300"
       disabled={(storyboard.current?.slides.length ?? 0) < 2}
-      onclick={onPreview}
+      onclick={() => onPreview('time')}
     >
       <span class="text-xs">▶</span> Preview
     </button>
@@ -100,7 +100,7 @@
     <button
       class="flex cursor-pointer items-center gap-1.5 px-1 text-scroll hover:bg-scroll/20 disabled:pointer-events-none disabled:text-neutral-300"
       disabled={(storyboard.current?.slides.length ?? 0) < 2}
-      onclick={onPreview}
+      onclick={() => onPreview('scroll')}
     >
       <span class="text-xs">▶</span> Preview
     </button>
