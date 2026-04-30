@@ -19,7 +19,10 @@ export function applySlideState(viewer, manifest, slide) {
   for (let i = 0; i < projs.length; i++) {
     const entry = projs[i]
     const v = slide.visibility?.projections?.[entry.id] ?? entry.visible
-    if (viewer.projections[i]) viewer.projections[i].visible = v
+    if (viewer.projections[i]) {
+      viewer.projections[i].visible = v
+      viewer.projections[i].projection.visible = v
+    }
   }
 }
 
