@@ -5,7 +5,7 @@
   import SplashScreen from './lib/SplashScreen.svelte'
   import SlideGrid from './lib/SlideGrid.svelte'
   import Viewer from './lib/Viewer.svelte'
-  import ScrollyPreview from './lib/ScrollyPreview.svelte'
+  import PreviewFrame from './lib/PreviewFrame.svelte'
 
   // Viewer navigation state
   let viewerOpen = $state(false)
@@ -57,10 +57,6 @@
     viewerOpen = false
   }
 
-  function handlePreviewDone() {
-    previewKind = null
-  }
-
   function handlePreviewCancel() {
     previewKind = null
   }
@@ -106,18 +102,8 @@
   <div class="flex h-screen w-screen items-center justify-center bg-neutral-950">
     <span class="text-sm text-neutral-600">Opening…</span>
   </div>
-{:else if previewKind === 'time'}
-  <Viewer
-    onCancel={handlePreviewCancel}
-    onPreviewDone={handlePreviewDone}
-    previewMode={true}
-    slides={storyboard.current.slides}
-  />
-{:else if previewKind === 'scroll'}
-  <ScrollyPreview
-    onCancel={handlePreviewCancel}
-    slides={storyboard.current.slides}
-  />
+{:else if previewKind === 'time' || previewKind === 'scroll'}
+  <PreviewFrame mode={previewKind} onCancel={handlePreviewCancel} />
 {:else if viewerOpen}
   <Viewer
     captureMode={true}

@@ -2,6 +2,7 @@
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
+  import { exportStaticSite } from './exportStaticSite.js'
 
   let { onPreview } = $props()
 
@@ -129,18 +130,24 @@
       <div class="flex min-w-48 flex-col items-start gap-1.5">
         <span class="px-1.5 text-xs text-neutral-600">Export</span>
         <button
-          class="cursor-pointer px-1.5 text-time hover:bg-time/20"
-          onclick={handleCreateBoard}
+          class="cursor-pointer px-1.5 text-time hover:bg-time/20 disabled:pointer-events-none disabled:opacity-40"
+          disabled={(storyboard.current?.slides.length ?? 0) < 2}
+          onclick={() => exportStaticSite('slideshow')}
         >
           Slideshow
         </button>
         <button
-          class="cursor-pointer px-1.5 text-scroll hover:bg-scroll/20"
-          onclick={handleCreateBoard}
+          class="cursor-pointer px-1.5 text-scroll hover:bg-scroll/20 disabled:pointer-events-none disabled:opacity-40"
+          disabled={(storyboard.current?.slides.length ?? 0) < 2}
+          onclick={() => exportStaticSite('scrolly')}
         >
           Scrollytelling
         </button>
-        <button class="cursor-pointer px-1.5 hover:bg-brand/20" onclick={handleCreateBoard}>
+        <button
+          class="cursor-pointer px-1.5 opacity-40 hover:bg-brand/20"
+          disabled
+          title="Coming soon"
+        >
           Camera
         </button>
       </div>
