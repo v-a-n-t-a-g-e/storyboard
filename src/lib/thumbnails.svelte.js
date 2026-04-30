@@ -19,6 +19,13 @@ export const thumbnailStore = {
   get generating() {
     return generating
   },
+  get viewer() {
+    return viewer
+  },
+  get manifest() {
+    return manifest
+  },
+  ensureReady,
   generateAll,
   generateOne,
   disposeViewer,

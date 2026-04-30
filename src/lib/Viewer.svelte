@@ -3,10 +3,7 @@
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
   import { applySlideState } from '$preview/sceneState.js'
-  import {
-    setVisibilityOverride,
-    projectionPose,
-  } from './captureState.svelte.js'
+  import { setVisibilityOverride, projectionPose } from './captureState.svelte.js'
   import CapturePanel from './CapturePanel.svelte'
   import { onMount } from 'svelte'
 
@@ -58,7 +55,19 @@
   function toggleProjection(entry, value) {
     projectionVis = setVisibilityOverride(projectionVis, entry.id, entry.visible, value)
     const i = manifest.projections.findIndex((p) => p.id === entry.id)
-    if (viewer.projections[i]) viewer.projections[i].visible = value
+    if (viewer.projections[i]) {
+      viewer.projections[i].visible = value
+      viewer.projections[i].projection.visible = value
+
+      console.log(viewer)
+
+      // for (const obj of sceneState.objects) {
+      //   if (visible) viewer.projections[i].projection.project(obj.object)
+      //   else viewer.projections[i].projection.unproject(obj.object)
+      // }
+      // console.log(viewer.projections[i])
+      // viewer.projections[i].visible = value
+    }
   }
 
   function handleFovChange(v) {

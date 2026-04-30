@@ -3,6 +3,7 @@
   import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
   import { exportStaticSite } from './exportStaticSite.js'
+  import { exportCameraGlb } from './exportCameraGlb.js'
   import BoardListMenu from './BoardListMenu.svelte'
 
   let { onPreview } = $props()
@@ -140,9 +141,9 @@
           Scrollytelling
         </button>
         <button
-          class="cursor-pointer px-1.5 opacity-40 hover:bg-brand/20"
-          disabled
-          title="Coming soon"
+          class="cursor-pointer px-1.5 hover:bg-brand/20 disabled:pointer-events-none disabled:opacity-40"
+          disabled={(storyboard.current?.slides.length ?? 0) < 2}
+          onclick={exportCameraGlb}
         >
           Camera
         </button>
