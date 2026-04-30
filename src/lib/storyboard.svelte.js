@@ -190,8 +190,14 @@ export const storyboard = {
       if (i !== index) return s
       const next = { ...s }
       if (patch.camera) next.camera = patch.camera
-      if (patch.visibility !== undefined) next.visibility = patch.visibility
-      if (patch.projectionRef !== undefined) next.projectionRef = patch.projectionRef
+      if ('visibility' in patch) {
+        if (patch.visibility) next.visibility = patch.visibility
+        else delete next.visibility
+      }
+      if ('projectionRef' in patch) {
+        if (patch.projectionRef) next.projectionRef = patch.projectionRef
+        else delete next.projectionRef
+      }
       return next
     })
     current = { ...current, slides }

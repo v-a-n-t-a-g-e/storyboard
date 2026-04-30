@@ -1,8 +1,10 @@
 import { SceneViewer } from '@krisenstab/vantage'
+import { applySlideState, resolveCamera } from '$preview/sceneState.js'
 
 // Off-screen canvas and viewer instance — created lazily, reused across calls.
 let canvas = null
 let viewer = null
+let manifest = null
 let ready = false
 let initPromise = null
 
@@ -44,7 +46,7 @@ async function ensureReady(handle) {
     document.body.appendChild(canvas)
 
     viewer = new SceneViewer(canvas)
-    await viewer.openProject(handle.fs.readFile)
+    manifest = await viewer.openProject(handle.fs.readFile)
     // Wait two frames so the ResizeObserver has fired and the renderer
     // has set the canvas pixel dimensions before we capture anything.
     await waitFrame()
@@ -59,6 +61,14 @@ function waitFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve))
 }
 
+async function captureSlide(slide) {
+  applySlideState(viewer, manifest, slide)
+  viewer.setCameraState(resolveCamera(viewer, manifest, slide))
+  await waitFrame()
+  await waitFrame() // two frames for the renderer to settle
+  thumbnails[slide.id] = canvas.toDataURL('image/jpeg', 0.92)
+}
+
 /** Generate thumbnails for all slides. Called when SlideGrid mounts. */
 async function generateAll(handle, slides) {
   if (slides.length === 0) return
@@ -66,10 +76,7 @@ async function generateAll(handle, slides) {
   try {
     await ensureReady(handle)
     for (const slide of slides) {
-      viewer.setCameraState(slide.camera)
-      await waitFrame()
-      await waitFrame() // two frames for the renderer to settle
-      thumbnails[slide.id] = canvas.toDataURL('image/jpeg', 0.92)
+      await captureSlide(slide)
     }
   } finally {
     generating = false
@@ -77,12 +84,9 @@ async function generateAll(handle, slides) {
 }
 
 /** Generate (or regenerate) a thumbnail for a single slide. */
-async function generateOne(handle, slideId, camera) {
+async function generateOne(handle, slide) {
   await ensureReady(handle)
-  viewer.setCameraState(camera)
-  await waitFrame()
-  await waitFrame() // two frames for the renderer to settle
-  thumbnails[slideId] = canvas.toDataURL('image/jpeg', 0.92)
+  await captureSlide(slide)
 }
 
 /** Tear down the off-screen viewer. Call when a storyboard is closed. */
@@ -95,6 +99,7 @@ function disposeViewer() {
     canvas.remove()
     canvas = null
   }
+  manifest = null
   ready = false
   initPromise = null
   thumbnails = {}

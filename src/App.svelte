@@ -41,14 +41,13 @@
   }
 
   function handleViewerConfirm(payload) {
-    const { camera } = payload
     if (viewerMode === 'new') {
       const slide = storyboard.insertSlide(viewerSlideIndex, payload)
-      thumbnailStore.generateOne(project.handle, slide.id, camera)
+      thumbnailStore.generateOne(project.handle, slide)
     } else {
-      const slide = storyboard.current.slides[viewerSlideIndex]
       storyboard.updateSlide(viewerSlideIndex, payload)
-      thumbnailStore.generateOne(project.handle, slide.id, camera)
+      const slide = storyboard.current.slides[viewerSlideIndex]
+      thumbnailStore.generateOne(project.handle, slide)
     }
     viewerOpen = false
   }

@@ -85,11 +85,11 @@
 
   function handleCapture() {
     const visibility = {}
-    if (Object.keys(objectVis).length) visibility.objects = objectVis
-    if (Object.keys(projectionVis).length) visibility.projections = projectionVis
+    if (Object.keys(objectVis).length) visibility.objects = { ...objectVis }
+    if (Object.keys(projectionVis).length) visibility.projections = { ...projectionVis }
     onConfirm({
       camera: viewer.getCameraState(),
-      visibility: Object.keys(visibility).length ? visibility : undefined,
+      visibility: Object.keys(visibility).length ? visibility : null,
       projectionRef: projectionRef ?? null,
     })
   }
