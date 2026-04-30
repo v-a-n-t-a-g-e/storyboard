@@ -19,11 +19,15 @@
   let viewer = null
   let manifest = $state(null)
 
+  // svelte-ignore state_referenced_locally
   let fov = $state(initialCamera?.fov ?? 50)
+  // svelte-ignore state_referenced_locally
   let projectionRef = $state(initialSlide?.projectionRef ?? null)
   /** @type {Record<string, boolean>} */
+  // svelte-ignore state_referenced_locally
   let objectVis = $state({ ...(initialSlide?.visibility?.objects ?? {}) })
   /** @type {Record<string, boolean>} */
+  // svelte-ignore state_referenced_locally
   let projectionVis = $state({ ...(initialSlide?.visibility?.projections ?? {}) })
 
   // Manifest entries → indices into viewer.scene.children (env at 0, then objects).
