@@ -26,7 +26,7 @@
     "vite": "^8.0.4"
   },
   "dependencies": {
-    "@krisenstab/vantage": "^0.1.6",
+    "@krisenstab/vantage": "^0.1.7",
     "client-zip": "^2.5.0"
   }
 }
