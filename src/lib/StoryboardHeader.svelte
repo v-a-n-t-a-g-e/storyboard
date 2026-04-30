@@ -3,6 +3,7 @@
   import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
   import { exportStaticSite } from './exportStaticSite.js'
+  import BoardListMenu from './BoardListMenu.svelte'
 
   let { onPreview } = $props()
 
@@ -56,11 +57,6 @@
     renamingId = storyboard.currentId
     renameValue = 'Untitled'
     thumbnailStore.generateAll(project.handle, storyboard.current.slides)
-  }
-
-  function focusSelect(node) {
-    node.focus()
-    node.select()
   }
 
   async function handleSave() {
@@ -152,58 +148,18 @@
         </button>
       </div>
 
-      <div class="flex flex-col items-start gap-1.5">
-        <span class="px-1.5 text-xs text-neutral-600">Storyboards</span>
-        <ul class="flex flex-wrap gap-2">
-          {#each storyboard.all as board (board.id)}
-            {@const selected = board.id === storyboard.currentId}
-            <li>
-              {#if selected}
-                <div class="flex flex-col gap-1 bg-brand/20 px-1.5 py-1">
-                  {#if renamingId === board.id}
-                    <input
-                      class="bg-brand/20 outline-none"
-                      onblur={commitRename}
-                      onkeydown={(e) => {
-                        if (e.key === 'Enter') commitRename()
-                        if (e.key === 'Escape') renamingId = null
-                      }}
-                      type="text"
-                      bind:value={renameValue}
-                      use:focusSelect
-                    />
-                  {:else}
-                    <span class="overflow-hidden text-nowrap text-ellipsis">{board.name}</span>
-                  {/if}
-                  <div class="flex gap-1 text-xs text-brand-deep">
-                    <button
-                      class="cursor-pointer hover:text-black hover:underline"
-                      onclick={() => startRename(board.id, board.name)}>Rename</button
-                    >
-                    <span>|</span>
-                    <button
-                      class="cursor-pointer hover:text-black hover:underline"
-                      onclick={() => handleDuplicateBoard(board.id)}>Duplicate</button
-                    >
-                    <span>|</span>
-                    <button
-                      class="cursor-pointer hover:text-pink-600 hover:underline"
-                      onclick={() => handleDeleteBoard(board.id)}>Delete</button
-                    >
-                  </div>
-                </div>
-              {:else}
-                <button
-                  class="flex cursor-pointer flex-col gap-1 bg-neutral-100 px-1.5 py-1 text-left hover:bg-brand/20"
-                  onclick={() => handleSwitchBoard(board.id)}
-                >
-                  <span class="overflow-hidden text-nowrap text-ellipsis">{board.name}</span>
-                </button>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      </div>
+      <BoardListMenu
+        boards={storyboard.all}
+        currentId={storyboard.currentId}
+        onCancelRename={() => (renamingId = null)}
+        onCommitRename={commitRename}
+        onDelete={handleDeleteBoard}
+        onDuplicate={handleDuplicateBoard}
+        onStartRename={startRename}
+        onSwitch={handleSwitchBoard}
+        {renamingId}
+        bind:renameValue
+      />
     </section>
   {/if}
 </header>

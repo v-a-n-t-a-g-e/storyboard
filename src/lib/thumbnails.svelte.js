@@ -81,7 +81,7 @@ async function generateOne(handle, slideId, camera) {
   await ensureReady(handle)
   viewer.setCameraState(camera)
   await waitFrame()
-  await waitFrame()
+  await waitFrame() // two frames for the renderer to settle
   thumbnails[slideId] = canvas.toDataURL('image/jpeg', 0.92)
 }
 

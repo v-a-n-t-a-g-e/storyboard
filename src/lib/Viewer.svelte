@@ -1,9 +1,13 @@
 <script>
   import { SceneViewer } from '@krisenstab/vantage'
-  import { Vector3 } from 'three'
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
-  import { applySlideState, resolveCamera } from '$preview/sceneState.js'
+  import { applySlideState } from '$preview/sceneState.js'
+  import {
+    setVisibilityOverride,
+    projectionPose,
+  } from './captureState.svelte.js'
+  import CapturePanel from './CapturePanel.svelte'
   import { onMount } from 'svelte'
 
   let {
@@ -18,7 +22,6 @@
   let viewer = null
   let manifest = $state(null)
 
-  // ── Capture-mode panel state ────────────────────────────────────────────────
   let fov = $state(initialCamera?.fov ?? 50)
   let projectionRef = $state(initialSlide?.projectionRef ?? null)
   /** @type {Record<string, boolean>} */
@@ -45,31 +48,17 @@
     }
   })
 
-  // ── Capture-mode panel handlers ─────────────────────────────────────────────
-  function setObjectVisible(id, defaultVisible, value) {
-    const next = { ...objectVis }
-    if (value === defaultVisible) delete next[id]
-    else next[id] = value
-    objectVis = next
-    const i = manifest.objects.findIndex((o) => o.id === id)
+  function toggleObject(entry, value) {
+    objectVis = setVisibilityOverride(objectVis, entry.id, entry.visible, value)
+    const i = manifest.objects.findIndex((o) => o.id === entry.id)
     const mesh = getObjectMesh(i)
     if (mesh) mesh.visible = value
   }
 
-  function setProjectionVisible(id, defaultVisible, value) {
-    const next = { ...projectionVis }
-    if (value === defaultVisible) delete next[id]
-    else next[id] = value
-    projectionVis = next
-    const i = manifest.projections.findIndex((p) => p.id === id)
+  function toggleProjection(entry, value) {
+    projectionVis = setVisibilityOverride(projectionVis, entry.id, entry.visible, value)
+    const i = manifest.projections.findIndex((p) => p.id === entry.id)
     if (viewer.projections[i]) viewer.projections[i].visible = value
-  }
-
-  function isObjectVisible(entry) {
-    return objectVis[entry.id] ?? entry.visible
-  }
-  function isProjectionVisible(entry) {
-    return projectionVis[entry.id] ?? entry.visible
   }
 
   function handleFovChange(v) {
@@ -78,21 +67,11 @@
     viewer.setCameraState({ ...c, fov: v })
   }
 
-  function previewProjectionPose() {
+  function handlePose() {
     if (!projectionRef || !manifest?.projections) return
     const idx = manifest.projections.findIndex((p) => p.id === projectionRef)
     if (idx < 0 || !viewer.projections[idx]) return
-    const proj = viewer.projections[idx].projection
-    const fwd = new Vector3(0, 0, -1).applyQuaternion(proj.quaternion)
-    viewer.setCameraState({
-      position: [proj.position.x, proj.position.y, proj.position.z],
-      target: [
-        proj.position.x + fwd.x,
-        proj.position.y + fwd.y,
-        proj.position.z + fwd.z,
-      ],
-      fov,
-    })
+    viewer.setCameraState(projectionPose(viewer.projections[idx].projection, fov))
   }
 
   function handleBack() {
@@ -150,93 +129,16 @@
   </div>
 
   {#if captureMode && manifest}
-    <div
-      class="pointer-events-auto absolute right-4 top-16 flex max-h-[calc(100vh-6rem)] w-72 flex-col gap-4 overflow-y-auto rounded-md bg-neutral-900/85 p-4 text-xs text-neutral-200 backdrop-blur"
-    >
-      <section>
-        <div class="mb-1 text-neutral-400">Field of view</div>
-        <div class="flex items-center gap-2">
-          <input
-            type="range"
-            min="10"
-            max="120"
-            step="1"
-            value={fov}
-            oninput={(e) => handleFovChange(Number(e.currentTarget.value))}
-            class="flex-1"
-          />
-          <input
-            type="number"
-            min="10"
-            max="120"
-            step="1"
-            value={fov}
-            oninput={(e) => handleFovChange(Number(e.currentTarget.value))}
-            class="w-14 rounded bg-neutral-800 px-1.5 py-0.5 text-right"
-          />
-        </div>
-      </section>
-
-      {#if (manifest.projections ?? []).length > 0}
-        <section>
-          <div class="mb-1 text-neutral-400">Camera from projection</div>
-          <div class="flex items-center gap-2">
-            <select
-              bind:value={projectionRef}
-              class="flex-1 rounded bg-neutral-800 px-1.5 py-1 text-neutral-100"
-            >
-              <option value={null}>(none — manual)</option>
-              {#each manifest.projections as p (p.id)}
-                <option value={p.id}>{p.name}</option>
-              {/each}
-            </select>
-            <button
-              class="cursor-pointer rounded bg-neutral-800 px-2 py-1 text-neutral-300 transition hover:bg-neutral-700 disabled:opacity-40"
-              disabled={!projectionRef}
-              onclick={previewProjectionPose}
-              title="Snap viewer camera to projection pose"
-            >
-              Pose
-            </button>
-          </div>
-        </section>
-      {/if}
-
-      {#if manifest.objects.length > 0}
-        <section>
-          <div class="mb-1 text-neutral-400">Objects</div>
-          <ul class="flex flex-col gap-1">
-            {#each manifest.objects as o (o.id)}
-              <li class="flex items-center justify-between gap-2">
-                <span class="truncate" title={o.name}>{o.name}</span>
-                <input
-                  type="checkbox"
-                  checked={isObjectVisible(o)}
-                  onchange={(e) => setObjectVisible(o.id, o.visible, e.currentTarget.checked)}
-                />
-              </li>
-            {/each}
-          </ul>
-        </section>
-      {/if}
-
-      {#if (manifest.projections ?? []).length > 0}
-        <section>
-          <div class="mb-1 text-neutral-400">Projections</div>
-          <ul class="flex flex-col gap-1">
-            {#each manifest.projections as p (p.id)}
-              <li class="flex items-center justify-between gap-2">
-                <span class="truncate" title={p.name}>{p.name}</span>
-                <input
-                  type="checkbox"
-                  checked={isProjectionVisible(p)}
-                  onchange={(e) => setProjectionVisible(p.id, p.visible, e.currentTarget.checked)}
-                />
-              </li>
-            {/each}
-          </ul>
-        </section>
-      {/if}
-    </div>
+    <CapturePanel
+      {fov}
+      {manifest}
+      {objectVis}
+      onFovChange={handleFovChange}
+      onPose={handlePose}
+      onToggleObject={toggleObject}
+      onToggleProjection={toggleProjection}
+      {projectionVis}
+      bind:projectionRef
+    />
   {/if}
 </div>

@@ -102,5 +102,5 @@
 <svelte:window onkeydown={onKey} />
 
 <div class="fixed inset-0 z-50 bg-black">
-  <iframe bind:this={iframe} {src} title="Preview" class="h-full w-full border-0"></iframe>
+  <iframe bind:this={iframe} class="h-full w-full border-0" {src} title="Preview"></iframe>
 </div>
