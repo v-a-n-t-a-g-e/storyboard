@@ -40,11 +40,11 @@
     <div class="pointer-events-none absolute inset-y-0 -right-2.5 z-20 h-55 w-px bg-brand"></div>
   {/if}
 
-  <div class="flex items-center justify-center framed-2.5 p-2.5" class:m-12.5={isContinuous}>
+  <div class="flex items-center justify-center framed-2.5 p-2.5" class:m-10={isContinuous}>
     <div
       class="aspect-auto h-50 w-50 overflow-hidden bg-neutral-900"
-      class:h-25!={isContinuous}
-      class:w-25!={isContinuous}
+      class:h-30!={isContinuous}
+      class:w-30!={isContinuous}
       onclick={() => onOpenSlide(index)}
       onkeydown={(e) => e.key === 'Enter' && onOpenSlide(index)}
       role="button"
