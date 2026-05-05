@@ -1,4 +1,5 @@
 <script>
+  import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
   import SlideTransition from './SlideTransition.svelte'
   import SlideDescription from './SlideDescription.svelte'
@@ -63,6 +64,29 @@
     </div>
 
     <SlideTransition {index} {isLast} {slide} />
+  </div>
+  <div class="-mt-px flex w-full justify-between framed-2.5 p-2.5 text-xs">
+    <div></div>
+    <div>
+      <button
+        class="hover:underline"
+        onclick={(e) => {
+          e.stopPropagation()
+          const newId = storyboard.duplicateSlide(index)
+          if (newId && thumbnailStore.thumbnails[slide.id]) {
+            thumbnailStore.thumbnails[newId] = thumbnailStore.thumbnails[slide.id]
+          }
+        }}>Duplicate</button
+      >
+      |
+      <button
+        class="hover:text-pink-600 hover:underline"
+        onclick={(e) => {
+          e.stopPropagation()
+          storyboard.deleteSlide(index)
+        }}>Delete</button
+      >
+    </div>
   </div>
   {#if !isContinuous}
     <SlideDescription {index} {slide} />
