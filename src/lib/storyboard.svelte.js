@@ -141,7 +141,7 @@ export const storyboard = {
     const slide = {
       id: crypto.randomUUID(),
       camera: patch.camera,
-      transition: { duration: 1, vh: 30, continuous: false },
+      transition: { duration: 1, vh: 75, continuous: false },
       title: '',
       description: '',
       ...(patch.visibility ? { visibility: patch.visibility } : {}),

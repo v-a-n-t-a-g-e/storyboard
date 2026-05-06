@@ -1,5 +1,4 @@
 <script>
-  import { storyboard } from './storyboard.svelte.js'
   import { thumbnailStore } from './thumbnails.svelte.js'
   import SlideTransition from './SlideTransition.svelte'
   import SlideDescription from './SlideDescription.svelte'
@@ -8,6 +7,7 @@
     slide,
     index,
     isLast,
+    isFirst,
     totalSlides,
     dragFromIndex,
     dropPosition,
@@ -23,7 +23,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="group card relative shrink-0 flex-col overflow-visible transition
+  class="group/card card relative shrink-0 flex-col overflow-visible transition
     {dragFromIndex === index ? 'cursor-grabbing opacity-40' : 'cursor-pointer'}
     border-neutral-800 {dragFromIndex === null ? 'hover:border-neutral-600' : ''}"
   draggable="true"
@@ -63,30 +63,7 @@
       {/if}
     </div>
 
-    <SlideTransition {index} {isLast} {slide} />
-  </div>
-  <div class="-mt-px flex w-full justify-between framed-2.5 p-2.5 text-xs">
-    <div></div>
-    <div>
-      <button
-        class="hover:underline"
-        onclick={(e) => {
-          e.stopPropagation()
-          const newId = storyboard.duplicateSlide(index)
-          if (newId && thumbnailStore.thumbnails[slide.id]) {
-            thumbnailStore.thumbnails[newId] = thumbnailStore.thumbnails[slide.id]
-          }
-        }}>Duplicate</button
-      >
-      |
-      <button
-        class="hover:text-pink-600 hover:underline"
-        onclick={(e) => {
-          e.stopPropagation()
-          storyboard.deleteSlide(index)
-        }}>Delete</button
-      >
-    </div>
+    <SlideTransition {index} {isFirst} {isLast} {slide} />
   </div>
   {#if !isContinuous}
     <SlideDescription {index} {slide} />

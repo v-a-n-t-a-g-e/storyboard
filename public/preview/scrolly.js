@@ -4,12 +4,7 @@
 // or the DOM template below.
 
 import { bootstrap } from './bootstrap.js'
-import {
-  buildSegments,
-  lerpCamera,
-  prepareSplineSegment,
-  splineCameraAt,
-} from './cameraPath.js'
+import { buildSegments, lerpCamera, prepareSplineSegment, splineCameraAt } from './cameraPath.js'
 import { applySlideState, resolveCamera } from './sceneState.js'
 
 function clamp01(x) {
@@ -60,7 +55,7 @@ export async function start({ isPreview }) {
     stops.push({ id: slides[0].id, description: slides[0].description ?? '', cumVh: 0 })
     for (const seg of segments) {
       const cameras = seg.map((s) => resolveCamera(viewer, manifest, s))
-      const subVh = seg.slice(0, -1).map((s) => s.transition?.vh ?? 30)
+      const subVh = seg.slice(0, -1).map((s) => s.transition?.vh ?? 75)
       const segVh = subVh.reduce((a, b) => a + b, 0)
       const startVh = cumVh
       if (cameras.length === 2) {

@@ -74,10 +74,10 @@
 </script>
 
 <header class="flex flex-col px-5">
-  <div class="flex items-center gap-1 py-2.5">
+  <div class="flex items-center py-2.5">
     <div class="h-px w-5 bg-black"></div>
     <button
-      class="flex cursor-pointer items-center gap-1.5 px-1.5 hover:bg-brand/20"
+      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
       onclick={(e) => {
         e.stopPropagation()
         dropdownOpen = !dropdownOpen
@@ -88,7 +88,7 @@
     </button>
     <div class="h-px flex-1 bg-black"></div>
     <button
-      class="flex cursor-pointer items-center gap-1.5 px-1 text-time hover:bg-time/20 disabled:pointer-events-none disabled:text-neutral-300"
+      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 text-time hover:framed-2.5 disabled:pointer-events-none disabled:text-neutral-300"
       disabled={(storyboard.current?.slides.length ?? 0) < 2}
       onclick={() => onPreview('time')}
     >
@@ -96,7 +96,7 @@
     </button>
     <div class="h-px w-5 bg-black"></div>
     <button
-      class="flex cursor-pointer items-center gap-1.5 px-1 text-scroll hover:bg-scroll/20 disabled:pointer-events-none disabled:text-neutral-300"
+      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 text-scroll hover:framed-2.5 disabled:pointer-events-none disabled:text-neutral-300"
       disabled={(storyboard.current?.slides.length ?? 0) < 2}
       onclick={() => onPreview('scroll')}
     >
@@ -108,40 +108,40 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <section class="flex gap-5 px-6" onclick={(e) => e.stopPropagation()}>
-      <div class="flex min-w-48 flex-col items-start gap-1.5">
-        <span class="px-1.5 text-xs text-neutral-600">Project</span>
-        <button class="cursor-pointer px-1.5 hover:bg-brand/20" onclick={handleCreateBoard}>
+      <div class="flex min-w-48 flex-col items-start gap-0.5">
+        <span class="px-2.5 text-xs text-neutral-600">Project</span>
+        <button class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5" onclick={handleCreateBoard}>
           New storyboard
         </button>
-        <button class="cursor-pointer px-1.5 hover:bg-brand/20" onclick={handleSave}>
+        <button class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5" onclick={handleSave}>
           Save
           {#if storyboard.dirty}
             <span class="text-brand">●</span>
           {/if}
         </button>
-        <button class="cursor-pointer px-1.5 hover:bg-brand/20" onclick={handleBack}>
+        <button class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5" onclick={handleBack}>
           Close
         </button>
       </div>
 
-      <div class="flex min-w-48 flex-col items-start gap-1.5">
-        <span class="px-1.5 text-xs text-neutral-600">Export</span>
+      <div class="flex min-w-48 flex-col items-start gap-0.5">
+        <span class="px-2.5 text-xs text-neutral-600">Export</span>
         <button
-          class="cursor-pointer px-1.5 text-time hover:bg-time/20 disabled:pointer-events-none disabled:opacity-40"
+          class="cursor-pointer px-2.5 py-0.75 text-time hover:framed-2.5 disabled:pointer-events-none disabled:opacity-40"
           disabled={(storyboard.current?.slides.length ?? 0) < 2}
           onclick={() => exportStaticSite('slideshow')}
         >
           Slideshow
         </button>
         <button
-          class="cursor-pointer px-1.5 text-scroll hover:bg-scroll/20 disabled:pointer-events-none disabled:opacity-40"
+          class="cursor-pointer px-2.5 py-0.75 text-scroll hover:framed-2.5 disabled:pointer-events-none disabled:opacity-40"
           disabled={(storyboard.current?.slides.length ?? 0) < 2}
           onclick={() => exportStaticSite('scrolly')}
         >
           Scrollytelling
         </button>
         <button
-          class="cursor-pointer px-1.5 hover:bg-brand/20 disabled:pointer-events-none disabled:opacity-40"
+          class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5 disabled:pointer-events-none disabled:opacity-40"
           disabled={(storyboard.current?.slides.length ?? 0) < 2}
           onclick={exportCameraGlb}
         >

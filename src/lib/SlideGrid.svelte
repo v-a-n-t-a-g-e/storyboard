@@ -85,8 +85,7 @@
           totalSlides={slides.length}
         />
       {/each}
-
-      <!-- Add Slide card -->
+      <!-- 
       <button
         class="group shrink-0 cursor-pointer flex-col text-neutral-700 transition hover:text-neutral-400 self-start"
         onclick={() => onNewSlide(slides.length - 1)}
@@ -98,7 +97,7 @@
           </div>
         </div>
         <div class="-mt-px h-25 w-full framed-2.5"></div>
-      </button>
+      </button> -->
     {/if}
   </div>
 </div>

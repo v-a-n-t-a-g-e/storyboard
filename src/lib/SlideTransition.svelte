@@ -1,9 +1,11 @@
 <script>
   import { storyboard } from './storyboard.svelte.js'
+  import { thumbnailStore } from './thumbnails.svelte.js'
+  import Delete from '../assets/Delete.svg'
 
-  let { slide, index, isLast } = $props()
+  let { slide, index, isFirst, isLast } = $props()
 
-  const tr = $derived(slide.transition ?? { duration: 1, vh: 30, continuous: false })
+  const tr = $derived(slide.transition ?? { duration: 1, vh: 75, continuous: false })
   const isContinuous = $derived(tr.continuous)
 
   function handleDurationChange(raw) {
@@ -12,7 +14,7 @@
   }
 
   function handleVhChange(raw) {
-    const vh = Math.max(1, parseInt(raw) || 30)
+    const vh = Math.max(1, parseInt(raw) || 75)
     storyboard.updateTransition(index, { ...tr, vh })
   }
 
@@ -20,10 +22,32 @@
     storyboard.updateTransition(index, { ...tr, continuous: !tr.continuous })
   }
 
-  const chevronOffsets = [-12.5, -25, -37.5, -50, -62.5, -75, -87.5]
+  const chevrons = [
+    { x: -185 },
+    { x: -175 },
+    { x: -165 },
+    { x: -155 },
+    { x: -5 },
+    { x: 5 },
+    { x: 15 },
+    { x: 25 },
+    { x: 35 },
+    { x: 45 },
+    { x: 55 },
+    { x: 65 },
+    { x: 75 },
+    { x: 85 },
+    { x: 95 },
+    { x: 105 },
+    { x: 115 },
+    { x: 125 },
+    { x: 135 },
+    { x: 145 },
+  ]
+  // : [105]
 </script>
 
-<button
+<!-- <button
   class="absolute left-0 -translate-x-5 cursor-pointer text-neutral-200 hover:text-black"
   class:text-brand!={isContinuous}
   onclick={!isLast
@@ -38,18 +62,21 @@
       : 'Transition (click for continuous)'
     : undefined}
 >
-  <svg height="20" width="30">
+  <svg height="20" width="75">
     <path d="M5,2.5 L12.5,10 L5,17.5" fill="none" stroke="currentColor"></path>
     <path d="M17.5,2.5 L25,10 L17.5,17.5" fill="none" stroke="currentColor"></path>
   </svg>
-</button>
+</button> -->
 
 <div
-  class="flex h-full w-25 flex-col items-center justify-center gap-1 px-2 py-1.5 transition-colors"
+  class="flex h-full w-25 flex-col justify-center gap-2.5 py-1.5 pl-2.5 transition-colors"
+  data-continous={isContinuous || null}
+  data-first={isFirst || null}
+  data-last={isLast || null}
 >
   {#if !isLast}
-    <div class="flex items-center bg-time/10 px-2 py-1">
-      <span class="w-5 text-xs text-time">s</span>
+    <label class="flex h-7.5 w-20 items-center framed-2.5 px-2 py-1 text-time">
+      <span class="w-5 text-xs">s</span>
       <input
         class="w-10 [appearance:textfield] px-1 py-0.5 text-right text-xs text-black focus:bg-white focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         min="0.1"
@@ -63,46 +90,89 @@
         type="number"
         value={tr.duration}
       />
-    </div>
+    </label>
   {/if}
-  <svg
-    class="overflow-visible {!isLast ? 'cursor-pointer' : ''}"
-    height="20"
-    onclick={!isLast
-      ? (e) => {
-          e.stopPropagation()
-          toggleContinuous()
-        }
-      : undefined}
-    role={!isLast ? 'button' : undefined}
-    title={!isLast
-      ? isContinuous
-        ? 'Continuous (click to use transition)'
-        : 'Transition (click for continuous)'
-      : undefined}
-    width="100"
+
+  <button
+    class="absolute top-3.5 right-3.5 flex h-5 w-5 items-center justify-center not-group-hover/card:invisible hover:text-pink-600"
+    onclick={(e) => {
+      e.stopPropagation()
+      storyboard.deleteSlide(index)
+    }}
   >
-    {#if isContinuous}
-      {#each chevronOffsets as offset (offset)}
+    <Delete />
+  </button>
+  <div class="flex h-5 w-25">
+    <svg
+      class="group/arrow overflow-visible hover:text-brand in-data-first:pointer-events-none in-data-last:pointer-events-none {!isLast
+        ? 'cursor-pointer'
+        : ''} h-5 w-25 in-data-continous:w-35"
+      onclick={!isLast && !isFirst
+        ? (e) => {
+            e.stopPropagation()
+            toggleContinuous()
+          }
+        : undefined}
+      role={!isLast && !isFirst ? 'button' : undefined}
+      title={!isLast && !isFirst
+        ? isContinuous
+          ? 'Continuous (click to use transition)'
+          : 'Transition (click for continuous)'
+        : undefined}
+    >
+      <g fill="none" stroke="currentColor">
+        <rect
+          class="not-in-data-continous:invisible"
+          height="20"
+          pointer-events="all"
+          stroke="none"
+          width="50"
+          x="-180"
+        />
         <path
-          d="M102.5,2.5 L110,10 L102.5,17.5"
-          fill="none"
-          stroke="currentColor"
-          transform="translate({offset})"
-        ></path>
-      {/each}
-    {:else}
-      <path d="M0,10 L110,10" fill="none" stroke="currentColor"></path>
-    {/if}
-    {#if !isLast}
-      <path d="M102.5,2.5 L110,10 L102.5,17.5" fill="none" stroke="currentColor"></path>
-    {:else}
-      <path d="M110,2.5 L110,17.5" fill="none" stroke="currentColor"></path>
-    {/if}
-  </svg>
+          class="not-in-data-continous:invisible group-hover/arrow:invisible"
+          d="M-178,5 L-173,10 L-178,15 M-168,5 L-163,10 L-168,15 M-158,5 L-153,10 L-158,15 M-148,5 L-143,10 L-148,15 M2,5 L7,10 L2,15 M12,5 L17,10 L12,15 M22,5 L27,10 L22,15 M32,5 L37,10 L32,15 M42,5 L47,10 L42,15 M52,5 L57,10 L52,15 M62,5 L67,10 L62,15 M72,5 L77,10 L72,15 M82,5 L87,10 L82,15 M92,5 L97,10 L92,15 M102,5 L107,10 L102,15 M112,5 L117,10 L112,15 M122,5 L127,10 L122,15 M132,5 L137,10 L132,15"
+        />
+        <path
+          class="not-group-hover/arrow:invisible not-in-data-continous:invisible"
+          d="M-178,10 L-143,10 M0,10 L137,10 M132,5 L137,10 L132,15"
+        />
+        <path
+          class="group-hover/arrow:invisible in-data-continous:invisible in-data-last:invisible"
+          d="M0,10 L97,10 M92,5 L97,10 L92,15"
+        />
+        <path
+          class="not-in-data-last:invisible group-hover/arrow:invisible in-data-continous:invisible"
+          d="M0,10 L97,10 M97,5 L97,15"
+        />
+        <path
+          class="not-group-hover/arrow:invisible in-data-continous:invisible"
+          d="M2,5 L7,10 L2,15 M12,5 L17,10 L12,15 M22,5 L27,10 L22,15 M32,5 L37,10 L32,15 M42,5 L47,10 L42,15 M52,5 L57,10 L52,15 M62,5 L67,10 L62,15 M72,5 L77,10 L72,15 M82,5 L87,10 L82,15 M92,5 L97,10 L92,15"
+        />
+      </g>
+    </svg>
+
+    <button
+      aria-label="add slide"
+      onclick={(e) => {
+        e.stopPropagation()
+        const newId = storyboard.duplicateSlide(index)
+        if (newId && thumbnailStore.thumbnails[slide.id]) {
+          thumbnailStore.thumbnails[newId] = thumbnailStore.thumbnails[slide.id]
+        }
+      }}
+    >
+      <svg class="h-5 w-5 hover:text-brand" fill="none" stroke="currentColor">
+        <path
+          class="invisible group-hover/card:visible in-data-last:visible"
+          d="M10,2.5 L10,17.5 M2.5,10 L17.5,10"
+        />
+      </svg>
+    </button>
+  </div>
   {#if !isLast}
-    <div class="flex items-center bg-scroll/10 px-2 py-1">
-      <span class="w-5 text-xs text-scroll">vh</span>
+    <label class="flex h-7.5 w-20 items-center framed-2.5 px-2 py-1 text-scroll">
+      <span class="w-5 text-xs">vh</span>
       <input
         class="w-10 [appearance:textfield] px-1 py-0.5 text-right text-xs text-black focus:bg-white focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         min="1"
@@ -114,8 +184,8 @@
         step="1"
         title="Scroll distance (vh)"
         type="number"
-        value={tr.vh ?? 30}
+        value={tr.vh ?? 75}
       />
-    </div>
+    </label>
   {/if}
 </div>
