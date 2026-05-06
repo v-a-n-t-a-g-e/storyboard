@@ -22,7 +22,7 @@
 
 <div class="flex flex-col items-start gap-0.5">
   <span class="px-2.5 text-xs text-neutral-600">Storyboards</span>
-  <ul class="flex flex-wrap gap-2.5">
+  <ul class="flex flex-wrap gap-x-2.5 gap-y-0.5">
     {#each boards as board (board.id)}
       {@const selected = board.id === currentId}
       <li>

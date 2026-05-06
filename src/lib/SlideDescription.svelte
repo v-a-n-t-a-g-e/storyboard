@@ -13,7 +13,7 @@
     ondragstart={(e) => e.preventDefault()}
     onkeydown={(e) => e.stopPropagation()}
     onmousedown={(e) => e.stopPropagation()}
-    placeholder="Description"
+    placeholder="Text"
     value={slide.description ?? ''}
   ></textarea>
 </div>
