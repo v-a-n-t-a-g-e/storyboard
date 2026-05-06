@@ -98,7 +98,7 @@
   <SplashScreen />
 {:else if storyboard.loading || !storyboard.current}
   <!-- Loading: project open but storyboard not yet resolved -->
-  <div class="flex h-screen w-screen items-center justify-center bg-neutral-950">
+  <div class="flex h-screen w-screen items-center justify-center">
     <span class="text-sm text-neutral-600">Opening…</span>
   </div>
 {:else if previewKind === 'time' || previewKind === 'scroll'}

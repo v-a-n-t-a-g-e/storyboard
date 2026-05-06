@@ -108,50 +108,52 @@
   }
 </script>
 
-<div class="flex h-screen w-screen flex-col bg-black lg:flex-row">
+<div class="flex h-screen w-screen flex-col">
+  <header class="flex items-center px-5 py-2.5">
+    <div class="h-px w-5 bg-black"></div>
+    <button
+      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
+      onclick={handleBack}
+    >
+      &larr; {captureMode ? 'Cancel' : 'Back'}
+    </button>
+    <div class="h-px w-5 bg-black"></div>
+    <span class="px-2.5 text-sm">{storyboard.current?.name}</span>
+    <div class="h-px flex-1 bg-black"></div>
+
+    {#if captureMode}
+      <button
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 text-brand hover:framed-2.5"
+        onclick={handleCapture}
+      >
+        Capture Position
+      </button>
+    {:else}
+      <button
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
+        onclick={handleSave}
+      >
+        Save
+      </button>
+    {/if}
+    <div class="h-px w-5 bg-black"></div>
+  </header>
+
   <div class="relative min-h-0 min-w-0 flex-1">
     <canvas bind:this={canvas} class="h-full w-full"></canvas>
 
-    <div class="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-4">
-      <div>
-        <button
-          class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
-          onclick={handleBack}
-        >
-          &larr; {captureMode ? 'Cancel' : 'Back'}
-        </button>
-        <span class="ml-3 text-sm text-neutral-400">{storyboard.current?.name}</span>
-      </div>
-
-      {#if captureMode}
-        <button
-          class="pointer-events-auto cursor-pointer rounded-md bg-blue-600/90 px-3 py-1.5 text-xs text-white backdrop-blur transition hover:bg-blue-500/90"
-          onclick={handleCapture}
-        >
-          Capture Position
-        </button>
-      {:else}
-        <button
-          class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
-          onclick={handleSave}
-        >
-          Save
-        </button>
-      {/if}
-    </div>
+    {#if captureMode && manifest}
+      <CapturePanel
+        {fov}
+        {manifest}
+        {objectVis}
+        onFovChange={handleFovChange}
+        onPose={handlePose}
+        onToggleObject={toggleObject}
+        onToggleProjection={toggleProjection}
+        {projectionVis}
+        bind:projectionRef
+      />
+    {/if}
   </div>
-
-  {#if captureMode && manifest}
-    <CapturePanel
-      {fov}
-      {manifest}
-      {objectVis}
-      onFovChange={handleFovChange}
-      onPose={handlePose}
-      onToggleObject={toggleObject}
-      onToggleProjection={toggleProjection}
-      {projectionVis}
-      bind:projectionRef
-    />
-  {/if}
 </div>
