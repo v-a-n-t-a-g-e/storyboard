@@ -57,7 +57,7 @@
   >
     <Delete />
   </button>
-  <div class="flex h-5 w-25">
+  <div class="flex h-5 w-30 in-data-continous:w-40">
     <svg
       class="group/arrow overflow-visible hover:text-brand in-data-first:pointer-events-none in-data-last:pointer-events-none {!isLast
         ? 'cursor-pointer'
