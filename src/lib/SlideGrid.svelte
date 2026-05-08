@@ -60,11 +60,19 @@
   >
     {#if storyboard.current?.slides.length === 0}
       <button
-        class="flex aspect-video w-64 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-700 text-neutral-500 transition hover:border-neutral-500 hover:text-neutral-300"
+        class="group/card card relative shrink-0 cursor-pointer flex-col overflow-visible transition hover:text-brand"
         onclick={() => onNewSlide(-1)}
       >
-        <span class="text-3xl font-light">+</span>
-        <span class="text-sm">Add first slide</span>
+        <div class="">
+          <div class="flex items-center justify-center framed-2.5 p-2.5">
+            <div class="flex h-50 w-75 flex-col items-center justify-center gap-5 overflow-hidden">
+              <svg class="block h-5 w-5" stroke="currentColor">
+                <path d="M10,2.5 L10,17.5 M2.5,10 L17.5,10" />
+              </svg>
+              <span class="text-black">Capture first slide</span>
+            </div>
+          </div>
+        </div>
       </button>
     {:else}
       {@const slides = storyboard.current.slides}
