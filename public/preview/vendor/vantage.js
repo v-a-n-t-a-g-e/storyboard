@@ -179,6 +179,7 @@ var k = "\n  uniform mat4 viewMatrixCamera;\n  uniform mat4 projectionMatrixCame
 	renderTarget;
 	texture = null;
 	projectionPlane = null;
+	_targets = /* @__PURE__ */ new Set();
 	_materials = /* @__PURE__ */ new Map();
 	_depthMaterial = new d({
 		polygonOffset: !0,
@@ -186,7 +187,17 @@ var k = "\n  uniform mat4 viewMatrixCamera;\n  uniform mat4 projectionMatrixCame
 		polygonOffsetUnits: 1
 	});
 	constructor({ texture: e, fov: t = 60, near: n = 5, far: i = 1e3, renderTargetSize: a = 1024 } = {}) {
-		super(t, 1, n, i), this.renderTarget = new y(a, a), this.renderTarget.depthTexture = new r(a, a), this._initProjectionPlane(), e && this.setTexture(e);
+		super(t, 1, n, i), this.renderTarget = new y(a, a), this.renderTarget.depthTexture = new r(a, a), this._initProjectionPlane();
+		let o = !0;
+		Object.defineProperty(this, "visible", {
+			get: () => o,
+			set: (e) => {
+				if (e !== o) if (o = e, e) for (let e of this._targets) this._applyToTarget(e);
+				else for (let e of this._targets) this._removeFromTarget(e);
+			},
+			enumerable: !0,
+			configurable: !0
+		}), e && this.setTexture(e);
 	}
 	updateProjectionMatrix() {
 		super.updateProjectionMatrix(), this._updateProjectionPlaneSize();
@@ -197,11 +208,21 @@ var k = "\n  uniform mat4 viewMatrixCamera;\n  uniform mat4 projectionMatrixCame
 		this.aspect = (t?.videoWidth ?? t?.width ?? 1) / (t?.videoHeight ?? t?.height ?? 1), this.updateProjectionMatrix(), this.projectionPlane && (this.projectionPlane.material.map = e, this.projectionPlane.material.needsUpdate = !0);
 	}
 	project(e) {
+		this._targets.add(e), this.visible && this._applyToTarget(e);
+	}
+	unproject(e) {
+		this._targets.delete(e), this._removeFromTarget(e);
+	}
+	reapply() {
+		for (let e of this._targets) this._removeFromTarget(e);
+		if (this.visible) for (let e of this._targets) this._applyToTarget(e);
+	}
+	_applyToTarget(e) {
 		e.traverse((e) => {
 			e.isMesh && this._applyMaterial(e);
 		});
 	}
-	unproject(e) {
+	_removeFromTarget(e) {
 		e.traverse((e) => {
 			if (!e.isMesh) return;
 			let t = e, n = this._materials.get(t);
@@ -569,7 +590,10 @@ var ge = class {
 		for (let e of r) this.scene.remove(e);
 		this.projections = t;
 		for (let { object: t, visible: n } of e) t.visible = n, this.scene.add(t);
-		for (let { projection: n, visible: r } of t) if (n.visible = r, this.scene.add(n), r) for (let { object: t, visible: r } of e) r && n.project(t);
+		for (let { projection: n, visible: r } of t) {
+			n.visible = r, this.scene.add(n);
+			for (let { object: t } of e) n.project(t);
+		}
 		this.env.grid.visible = n.showGrid ?? !0, n.clearColor && this.renderer.setClearColor(n.clearColor);
 	}
 	getCameraState() {
@@ -1380,8 +1404,11 @@ async function It(e) {
 	let t = e.dataTransfer?.items;
 	if (!t || t.length === 0) return null;
 	let n = t[0], r = n.getAsFile();
-	if ("getAsFileSystemHandle" in n) try {
-		let e = await n.getAsFileSystemHandle();
+	if ("getAsFileSystemHandle" in n) {
+		let e = null;
+		try {
+			e = await n.getAsFileSystemHandle();
+		} catch {}
 		if (e && e.kind === "directory") {
 			let t = e;
 			if (await t.requestPermission({ mode: "readwrite" }) === "granted") {
@@ -1389,7 +1416,7 @@ async function It(e) {
 				return await Vt(e), Ht(e, t.name, t);
 			}
 		}
-	} catch {}
+	}
 	let i = n.webkitGetAsEntry?.();
 	if (i?.isDirectory) {
 		let e = await Yt(i);
