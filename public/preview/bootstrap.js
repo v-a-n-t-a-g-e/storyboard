@@ -77,10 +77,7 @@ export async function bootstrap({ isPreview }) {
       new Promise((resolve, reject) => {
         const id = nextReqId++
         pendingReads.set(id, { resolve, reject })
-        window.parent?.postMessage(
-          { source: 'narrator', type: 'narrator-fs-read', id, path },
-          '*'
-        )
+        window.parent?.postMessage({ source: 'narrator', type: 'narrator-fs-read', id, path }, '*')
       })
 
     manifest = await viewer.openProject(readFile)

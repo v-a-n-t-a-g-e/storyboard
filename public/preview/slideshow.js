@@ -3,12 +3,7 @@
 // label, restyle via style.css, etc.
 
 import { bootstrap } from './bootstrap.js'
-import {
-  buildSegments,
-  lerpCamera,
-  prepareSplineSegment,
-  splineCameraAt,
-} from './cameraPath.js'
+import { buildSegments, lerpCamera, prepareSplineSegment, splineCameraAt } from './cameraPath.js'
 import { applySlideState, resolveCamera } from './sceneState.js'
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)

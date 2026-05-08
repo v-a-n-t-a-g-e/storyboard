@@ -4,38 +4,63 @@
  * on Tailwind. End users can edit this freely.
  */
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: #fff;
   color: #000;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
 /* ───────────────────────────────────────────────── framed-2.5 corner helper
    Matches the app's `framed-2.5` utility: 10 px corner lines via CSS gradients.
    Uses currentColor so it inherits from the element's text colour. */
 
-:root { --framed: 0.625rem; }
+:root {
+  --framed: 0.625rem;
+}
 
 .framed {
   background-image:
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed));
-  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed));
+  background-position:
+    top left,
+    top left,
+    top right,
+    top right,
+    bottom left,
+    bottom left,
+    bottom right,
+    bottom right;
   background-size:
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed);
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
   background-repeat: no-repeat;
 }
 
@@ -55,20 +80,32 @@ html, body {
 }
 .stop-btn:hover {
   background-image:
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed));
-  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed));
+  background-position:
+    top left,
+    top left,
+    top right,
+    top right,
+    bottom left,
+    bottom left,
+    bottom right,
+    bottom right;
   background-size:
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed);
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
   background-repeat: no-repeat;
 }
 
@@ -81,7 +118,9 @@ html, body {
   height: 100vh;
 }
 @media (min-width: 1024px) {
-  .slideshow { flex-direction: row; }
+  .slideshow {
+    flex-direction: row;
+  }
 }
 
 .slideshow .stage {
@@ -115,20 +154,32 @@ html, body {
 }
 .slideshow .stage .topbar button:hover {
   background-image:
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed));
-  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed));
+  background-position:
+    top left,
+    top left,
+    top right,
+    top right,
+    bottom left,
+    bottom left,
+    bottom right,
+    bottom right;
   background-size:
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed);
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
   background-repeat: no-repeat;
 }
 
@@ -184,20 +235,32 @@ html, body {
 }
 .slideshow aside .footer button:hover:not(:disabled) {
   background-image:
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed));
-  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed));
+  background-position:
+    top left,
+    top left,
+    top right,
+    top right,
+    bottom left,
+    bottom left,
+    bottom right,
+    bottom right;
   background-size:
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed);
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
   background-repeat: no-repeat;
 }
 .slideshow aside .footer button:disabled {
@@ -238,20 +301,32 @@ html, body {
   white-space: pre-wrap;
   background-color: #fff;
   background-image:
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
     linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to right,  currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to left,   currentColor var(--framed), transparent var(--framed)),
-    linear-gradient(to top,    currentColor var(--framed), transparent var(--framed));
-  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)),
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed));
+  background-position:
+    top left,
+    top left,
+    top right,
+    top right,
+    bottom left,
+    bottom left,
+    bottom right,
+    bottom right;
   background-size:
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed),
-    var(--framed) 1px, 1px var(--framed);
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
   background-repeat: no-repeat;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
