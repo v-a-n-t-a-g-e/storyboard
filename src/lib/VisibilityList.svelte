@@ -12,11 +12,11 @@
     {@const visible = readVisibility(overrides, item)}
     {@const active = activeAimId === item.id || null}
     <li class="flex items-center justify-between gap-2">
-      <span class="truncate" class:text-neutral-300={!visible} title={item.name}>{item.name}</span>
+      <span class="truncate {!visible && 'text-black/30'}" title={item.name}>{item.name}</span>
       <div class="flex shrink-0 items-center gap-2">
         {#if onAim}
           <button
-            class="group cursor-pointer text-neutral-300 transition hover:text-brand-dark"
+            class="group cursor-pointer text-black/30 transition hover:text-brand-dark"
             class:text-brand-dark!={active}
             onclick={() => onAim(item)}
             title={active ? 'Detach camera' : 'Attach camera'}
@@ -25,7 +25,7 @@
           </button>
         {/if}
         <button
-          class="group cursor-pointer text-neutral-300 transition hover:text-brand-dark"
+          class="group cursor-pointer text-black/30 transition hover:text-brand-dark"
           class:text-black!={visible}
           onclick={() => onToggle(item, !visible)}
           title={visible ? 'Hide' : 'Show'}

@@ -20,16 +20,6 @@ export async function start({ isPreview }) {
   const stage = document.createElement('div')
   stage.className = 'stage'
   stage.appendChild(canvas)
-  const topbar = document.createElement('div')
-  topbar.className = 'topbar'
-  if (isPreview) {
-    const stop = document.createElement('button')
-    stop.textContent = '✕ Stop'
-    stop.onclick = () =>
-      window.parent?.postMessage({ source: 'narrator', type: 'narrator-cancel' }, '*')
-    topbar.appendChild(stop)
-  }
-  stage.appendChild(topbar)
   const aside = document.createElement('aside')
   const desc = document.createElement('div')
   desc.className = 'desc'
@@ -37,8 +27,11 @@ export async function start({ isPreview }) {
   desc.appendChild(descP)
   const footer = document.createElement('div')
   footer.className = 'footer'
+  const backBtn = document.createElement('button')
+  backBtn.textContent = '← Back'
   const counter = document.createElement('span')
   const nextBtn = document.createElement('button')
+  footer.appendChild(backBtn)
   footer.appendChild(counter)
   footer.appendChild(nextBtn)
   aside.appendChild(desc)
@@ -67,8 +60,16 @@ export async function start({ isPreview }) {
     descP.textContent = stop?.description ?? ''
     counter.textContent = `${stopIdx + 1} / ${stops.length}`
     const done = stops.length > 0 && stopIdx >= segments.length
-    nextBtn.disabled = playing || done
-    nextBtn.textContent = done ? 'Done' : playing ? 'Playing…' : 'Next ▶'
+    backBtn.disabled = playing || stopIdx === 0
+    if (done) {
+      nextBtn.disabled = false
+      nextBtn.textContent = 'Restart ↺'
+      nextBtn.onclick = restart
+    } else {
+      nextBtn.disabled = playing
+      nextBtn.textContent = playing ? 'Playing…' : 'Next →'
+      nextBtn.onclick = playNext
+    }
   }
 
   // ── Animation ─────────────────────────────────────────────────────
@@ -119,12 +120,30 @@ export async function start({ isPreview }) {
     render()
   }
 
-  nextBtn.onclick = playNext
+  function playBack() {
+    if (playing || stopIdx === 0) return
+    stopIdx -= 1
+    const slide = stops[stopIdx]
+    applySlideState(viewer, manifest, slide)
+    const cam = resolveCamera(viewer, manifest, slide)
+    viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+    viewer.setCameraState(cam)
+    render()
+  }
+
+  function restart() {
+    stopIdx = 0
+    goToStart()
+    render()
+  }
+
+  backBtn.onclick = playBack
 
   // ── Init ──────────────────────────────────────────────────────────
   viewer.beginPlayback?.()
   recompute()
-  function applyInitialCamera() {
+
+  function goToStart() {
     if (slides.length === 0) return
     applySlideState(viewer, manifest, slides[0])
     const cam = resolveCamera(viewer, manifest, slides[0])
@@ -132,7 +151,7 @@ export async function start({ isPreview }) {
     viewer.setCameraState(cam)
   }
 
-  applyInitialCamera()
+  goToStart()
 
   boot.onUpdate((next) => {
     slides = next
@@ -143,7 +162,7 @@ export async function start({ isPreview }) {
       stopIdx = 0
       playing = false
       recompute()
-      applyInitialCamera()
+      goToStart()
     })
   })
 

@@ -48,7 +48,7 @@
 
 <header class="flex items-center gap-2.5 px-5 py-2.5">
   <div class="h-px w-5 bg-black"></div>
-  <h1 class=" text-nowrap">Vantage Storyboard</h1>
+  <h1 class="py-0.75 text-nowrap">Vantage Storyboard</h1>
   <div class="h-px flex-1 bg-black"></div>
 </header>
 <div class="m-5 mt-20 flex flex-col justify-center sm:flex-row">

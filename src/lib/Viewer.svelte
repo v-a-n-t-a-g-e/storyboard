@@ -1,14 +1,12 @@
 <script>
   import { SceneViewer } from '@krisenstab/vantage'
   import { project } from './project.svelte.js'
-  import { storyboard } from './storyboard.svelte.js'
   import { applySlideState } from '$preview/sceneState.js'
   import { setVisibilityOverride, projectionPose } from './captureState.svelte.js'
   import CapturePanel from './CapturePanel.svelte'
   import { onMount } from 'svelte'
 
   let {
-    captureMode = false,
     initialCamera = null,
     initialSlide = null,
     onConfirm = () => {},
@@ -39,10 +37,8 @@
     viewer = new SceneViewer(canvas)
     viewer.openProject(project.handle.fs.readFile).then((m) => {
       manifest = m
-      if (captureMode) {
-        if (initialSlide) applySlideState(viewer, manifest, initialSlide)
-        if (initialCamera !== null) viewer.setCameraState(initialCamera)
-      }
+      if (initialSlide) applySlideState(viewer, manifest, initialSlide)
+      if (initialCamera !== null) viewer.setCameraState(initialCamera)
     })
     return () => {
       viewer.dispose?.()
@@ -62,13 +58,6 @@
     if (viewer.projections[i]) {
       viewer.projections[i].visible = value
       viewer.projections[i].projection.visible = value
-
-      // for (const obj of sceneState.objects) {
-      //   if (visible) viewer.projections[i].projection.project(obj.object)
-      //   else viewer.projections[i].projection.unproject(obj.object)
-      // }
-      // console.log(viewer.projections[i])
-      // viewer.projections[i].visible = value
     }
   }
 
@@ -103,11 +92,6 @@
     onCancel()
   }
 
-  async function handleSave() {
-    await storyboard.save(project.handle)
-    await project.save()
-  }
-
   function handleCapture() {
     const visibility = {}
     if (Object.keys(objectVis).length) visibility.objects = { ...objectVis }
@@ -120,54 +104,46 @@
   }
 </script>
 
-<div class="flex h-screen w-screen flex-col">
-  <header class="flex items-center px-5 py-2.5">
+<div class="relative h-screen w-screen">
+  <canvas bind:this={canvas} class="h-full w-full"></canvas>
+
+  <header class="absolute inset-x-0 top-0 z-10 flex items-center px-5 py-2.5">
     <div class="h-px w-5 bg-black"></div>
-    <button
-      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
-      onclick={handleBack}
-    >
-      &larr; {captureMode ? 'Cancel' : 'Back'}
-    </button>
-    <div class="h-px w-5 bg-black"></div>
-    <span class="px-2.5 text-sm">{storyboard.current?.name}</span>
+    <div class="hover:bg-white">
+      <button
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
+        onclick={handleBack}
+      >
+        Cancel
+      </button>
+    </div>
     <div class="h-px flex-1 bg-black"></div>
 
-    {#if captureMode}
+    <div class="hover:bg-white">
       <button
-        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 text-brand hover:framed-2.5"
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
         onclick={handleCapture}
       >
         Capture Position
       </button>
-    {:else}
-      <button
-        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
-        onclick={handleSave}
-      >
-        Save
-      </button>
-    {/if}
+    </div>
+
     <div class="h-px w-5 bg-black"></div>
   </header>
 
-  <div class="relative min-h-0 min-w-0 flex-1">
-    <canvas bind:this={canvas} class="h-full w-full"></canvas>
-
-    {#if captureMode && manifest}
-      {#if projectionRef}
-        <div class="absolute inset-0 cursor-not-allowed"></div>
-      {/if}
-      <CapturePanel
-        {fov}
-        {manifest}
-        {objectVis}
-        onFovChange={handleFovChange}
-        onToggleObject={toggleObject}
-        onToggleProjection={toggleProjection}
-        {projectionVis}
-        bind:projectionRef
-      />
+  {#if manifest}
+    {#if projectionRef}
+      <div class="absolute inset-0 cursor-not-allowed"></div>
     {/if}
-  </div>
+    <CapturePanel
+      {fov}
+      {manifest}
+      {objectVis}
+      onFovChange={handleFovChange}
+      onToggleObject={toggleObject}
+      onToggleProjection={toggleProjection}
+      {projectionVis}
+      bind:projectionRef
+    />
+  {/if}
 </div>

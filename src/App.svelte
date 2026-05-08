@@ -105,7 +105,6 @@
   <PreviewFrame mode={previewKind} onCancel={handlePreviewCancel} />
 {:else if viewerOpen}
   <Viewer
-    captureMode={true}
     initialCamera={getInitialCamera()}
     initialSlide={getInitialSlide()}
     onCancel={handleViewerCancel}

@@ -26,15 +26,6 @@ export async function start({ isPreview }) {
   scroller.appendChild(track)
   document.body.appendChild(scroller)
 
-  if (isPreview) {
-    const stop = document.createElement('button')
-    stop.className = 'stop-btn'
-    stop.textContent = '✕ Stop'
-    stop.onclick = () =>
-      window.parent?.postMessage({ source: 'narrator', type: 'narrator-cancel' }, '*')
-    document.body.appendChild(stop)
-  }
-
   // ── State / path computation ──────────────────────────────────────
   let slides = boot.slides
   /** @type {Array<{ kind: 'lerp'|'spline', cameras?: any[], prepared?: any, slides: any[], startVh: number, segVh: number }>} */

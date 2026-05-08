@@ -18,33 +18,39 @@
 </script>
 
 <div
-  class="pointer-events-auto absolute top-5 right-5 flex max-h-[calc(100vh-5rem)] w-64 flex-col gap-5 overflow-y-auto"
+  class="pointer-events-auto absolute top-17.5 right-5 flex max-h-[calc(100vh-5rem)] w-64 flex-col gap-5 overflow-y-auto"
 >
-  <div class="flex flex-col gap-5 bg-white px-5 py-5">
-    {#if manifest.objects.length > 0}
-      <section>
-        <div class="mb-1 text-xs text-neutral-600">Objects</div>
-        <VisibilityList items={manifest.objects} onToggle={onToggleObject} overrides={objectVis} />
-      </section>
-    {/if}
+  <div class="hover:bg-white">
+    <div class="flex flex-col gap-5 framed-2.5 px-5 py-5">
+      {#if manifest.objects.length > 0}
+        <section>
+          <div class="mb-1 text-xs text-black/60">Objects</div>
+          <VisibilityList
+            items={manifest.objects}
+            onToggle={onToggleObject}
+            overrides={objectVis}
+          />
+        </section>
+      {/if}
 
-    {#if (manifest.projections ?? []).length > 0}
-      <section>
-        <div class="mb-1 text-xs text-neutral-600">Projections</div>
-        <VisibilityList
-          activeAimId={projectionRef}
-          items={manifest.projections}
-          onAim={onAimProjection}
-          onToggle={onToggleProjection}
-          overrides={projectionVis}
-        />
-      </section>
-    {/if}
+      {#if (manifest.projections ?? []).length > 0}
+        <section>
+          <div class="mb-1 text-xs text-black/60">Projections</div>
+          <VisibilityList
+            activeAimId={projectionRef}
+            items={manifest.projections}
+            onAim={onAimProjection}
+            onToggle={onToggleProjection}
+            overrides={projectionVis}
+          />
+        </section>
+      {/if}
+    </div>
   </div>
 
   {#if !projectionRef}
-    <section class="bg-white px-5 py-5">
-      <div class="flex items-center justify-between gap-2 text-xs text-neutral-600">
+    <section class="hover:bg-white">
+      <div class="flex items-center justify-between gap-2 framed-2.5 p-5 text-xs text-black/60">
         <div class="">Field of view</div>
 
         <!-- <input

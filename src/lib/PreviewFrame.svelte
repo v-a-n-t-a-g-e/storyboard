@@ -93,7 +93,6 @@
     }
   })
 
-  // Esc as a fallback, in case the iframe runtime fails to render its ✕ Stop button.
   function onKey(e) {
     if (e.key === 'Escape') onCancel()
   }
@@ -103,4 +102,19 @@
 
 <div class="fixed inset-0 z-50 bg-white">
   <iframe bind:this={iframe} class="h-full w-full border-0" {src} title="Preview"></iframe>
+  <header
+    class="absolute inset-x-0 top-0 flex items-center px-5 py-2.5 {previewMode !== 'scrolly' &&
+      'w-[calc(100vw-390px)]'}"
+  >
+    <div class="h-px w-5 bg-black"></div>
+    <div class="hover:bg-white">
+      <button
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
+        onclick={onCancel}
+      >
+        Exit preview
+      </button>
+    </div>
+    <div class="h-px flex-1 bg-black"></div>
+  </header>
 </div>
