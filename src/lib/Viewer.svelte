@@ -1,190 +1,47 @@
 <script>
   import { SceneViewer } from '@krisenstab/vantage'
-  import { CatmullRomCurve3, Vector3 } from 'three'
   import { project } from './project.svelte.js'
   import { storyboard } from './storyboard.svelte.js'
+  import { applySlideState } from '$preview/sceneState.js'
+  import { setVisibilityOverride, projectionPose } from './captureState.svelte.js'
+  import CapturePanel from './CapturePanel.svelte'
   import { onMount } from 'svelte'
 
   let {
     captureMode = false,
     initialCamera = null,
+    initialSlide = null,
     onConfirm = () => {},
     onCancel = () => {},
-    previewMode = false,
-    slides = [],
-    onPreviewDone = () => {},
   } = $props()
 
   let canvas = $state(null)
   let viewer = null
-  let previewRunning = $state(false)
-  let stopRequested = false
+  let manifest = $state(null)
 
-  // ── Easing ──────────────────────────────────────────────────────────────────
-  const EASINGS = {
-    'ease-in-out': (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2),
-    'ease-in': (t) => t * t * t,
-    'ease-out': (t) => 1 - (1 - t) ** 3,
-    linear: (t) => t,
-  }
+  // svelte-ignore state_referenced_locally
+  let fov = $state(initialCamera?.fov ?? 50)
+  // svelte-ignore state_referenced_locally
+  let projectionRef = $state(initialSlide?.projectionRef ?? null)
+  /** @type {Record<string, boolean>} */
+  // svelte-ignore state_referenced_locally
+  let objectVis = $state({ ...(initialSlide?.visibility?.objects ?? {}) })
+  /** @type {Record<string, boolean>} */
+  // svelte-ignore state_referenced_locally
+  let projectionVis = $state({ ...(initialSlide?.visibility?.projections ?? {}) })
 
-  // ── Camera lerp (stop → stop, no waypoints) ─────────────────────────────────
-  function lerpCamera(from, to, t) {
-    return {
-      position: /** @type {[number,number,number]} */ (
-        from.position.map((v, i) => v + (to.position[i] - v) * t)
-      ),
-      target: /** @type {[number,number,number]} */ (
-        from.target.map((v, i) => v + (to.target[i] - v) * t)
-      ),
-      fov: from.fov + (to.fov - from.fov) * t,
-    }
-  }
-
-  function rafLoop(durationMs, onTick) {
-    return new Promise((resolve) => {
-      const start = performance.now()
-      function frame() {
-        if (stopRequested) {
-          resolve()
-          return
-        }
-        const raw = Math.min((performance.now() - start) / durationMs, 1)
-        onTick(raw)
-        if (raw < 1) requestAnimationFrame(frame)
-        else resolve()
-      }
-      requestAnimationFrame(frame)
-    })
-  }
-
-  /** Animate between two camera states (simple lerp with easing). */
-  function animateCamera(from, to, durationMs, easeFn) {
-    return rafLoop(durationMs, (raw) => {
-      viewer.setCameraState(lerpCamera(from, to, easeFn(raw)))
-    })
-  }
-
-  /**
-   * Animate through an array of camera states using a Catmull-Rom spline with
-   * per-segment timing. Each subDurationMs entry controls exactly when the camera
-   * reaches the corresponding control point.
-   * Easing is applied globally (shapes the speed profile of the whole group).
-   */
-  function animateSplineWithTiming(cameras, subDurationMs, totalMs, easeFn) {
-    const N = cameras.length
-    const posCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.position)))
-    const tgtCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.target)))
-
-    // Cumulative time fractions: timeFrac[i] = when camera should be at cameras[i]
-    const timeFrac = [0]
-    let cum = 0
-    for (const d of subDurationMs) {
-      cum += d
-      timeFrac.push(cum / totalMs)
-    }
-
-    // Arc-length fractions for each control point.
-    // Control point i sits at raw spline param i/(N-1).
-    // getLengths(D)[k] = cumulative arc length at raw param k/D.
-    const D = Math.max(200, N * 100)
-    const lengths = posCurve.getLengths(D)
-    const totalLen = lengths[lengths.length - 1]
-    const arcFrac = [0]
-    for (let i = 1; i < N - 1; i++) {
-      arcFrac.push(lengths[Math.round((i / (N - 1)) * D)] / totalLen)
-    }
-    arcFrac.push(1.0)
-
-    const fovStart = cameras[0].fov
-    const fovEnd = cameras[N - 1].fov
-
-    return rafLoop(totalMs, (raw) => {
-      const t = easeFn(raw) // global easing applied to time
-      let seg = 0
-      while (seg < N - 2 && t >= timeFrac[seg + 1]) seg++
-      const span = timeFrac[seg + 1] - timeFrac[seg]
-      const tLocal = span > 0 ? (t - timeFrac[seg]) / span : 1
-      const u = Math.max(0, Math.min(1, arcFrac[seg] + tLocal * (arcFrac[seg + 1] - arcFrac[seg])))
-      const pos = posCurve.getPointAt(u)
-      const tgt = tgtCurve.getPointAt(u)
-      viewer.setCameraState({
-        position: /** @type {[number,number,number]} */ ([pos.x, pos.y, pos.z]),
-        target: /** @type {[number,number,number]} */ ([tgt.x, tgt.y, tgt.z]),
-        fov: fovStart + (fovEnd - fovStart) * t,
-      })
-    })
-  }
-
-  /**
-   * Group slides into segments delimited by stop slides.
-   * Returns arrays of slide objects: each group starts and ends with a stop.
-   * e.g. [Stop, WP, WP, Stop] and [Stop, Stop]
-   */
-  /**
-   * Group slides into segments delimited by stops.
-   * A slide is a waypoint (not a stop) if its outgoing transition easing is 'continuous'.
-   * A segment closes when we encounter a stop at i > groupStart; slide i is included
-   * in the closing segment and also begins the next one.
-   */
-  function buildSegments(slides) {
-    const N = slides.length
-    const segments = []
-    let groupStart = 0
-    for (let i = 0; i < N - 1; i++) {
-      const easing = slides[i].transition?.easing ?? 'ease-in-out'
-      if (easing !== 'continuous' && i > groupStart) {
-        segments.push(slides.slice(groupStart, i + 1))
-        groupStart = i
-      }
-    }
-    // Always flush remaining slides (last slide is always a stop)
-    segments.push(slides.slice(groupStart))
-    return segments
-  }
-
-  async function startPreview() {
-    previewRunning = true
-    stopRequested = false
-    viewer.beginPlayback?.()
-    viewer.setCameraState(slides[0].camera)
-    await new Promise((r) => requestAnimationFrame(r))
-
-    const segments = buildSegments(slides)
-
-    for (const group of segments) {
-      if (stopRequested) break
-
-      const cameras = group.map((s) => s.camera)
-      // Sub-durations come from the departure transition of each slide except the last (arriving stop)
-      const subDurMs = group.slice(0, -1).map((s) => (s.transition?.duration ?? 1) * 1000)
-      const totalMs = subDurMs.reduce((a, b) => a + b, 0)
-
-      // Easing comes from the first slide's departure (always a real easing, never 'continuous')
-      const easeFn = EASINGS[group[0].transition?.easing ?? 'ease-in-out'] ?? EASINGS['ease-in-out']
-
-      if (cameras.length === 2) {
-        // Simple stop-to-stop: linear lerp with easing
-        await animateCamera(cameras[0], cameras[1], totalMs, easeFn)
-      } else {
-        // Continuous waypoints: Catmull-Rom spline with per-segment timing
-        await animateSplineWithTiming(cameras, subDurMs, totalMs, easeFn)
-      }
-    }
-
-    viewer.endPlayback?.()
-    previewRunning = false
-    if (!stopRequested) onPreviewDone()
+  // Manifest entries → indices into viewer.scene.children (env at 0, then objects).
+  function getObjectMesh(i) {
+    return viewer?.scene?.children?.[1 + i] ?? null
   }
 
   onMount(() => {
     viewer = new SceneViewer(canvas)
-    viewer.openProject(project.handle.fs.readFile).then(() => {
-      if (captureMode && initialCamera !== null) {
-        viewer.setCameraState(initialCamera)
-      }
-      if (previewMode && slides.length > 0) {
-        startPreview()
+    viewer.openProject(project.handle.fs.readFile).then((m) => {
+      manifest = m
+      if (captureMode) {
+        if (initialSlide) applySlideState(viewer, manifest, initialSlide)
+        if (initialCamera !== null) viewer.setCameraState(initialCamera)
       }
     })
     return () => {
@@ -192,8 +49,57 @@
     }
   })
 
+  function toggleObject(entry, value) {
+    objectVis = setVisibilityOverride(objectVis, entry.id, entry.visible, value)
+    const i = manifest.objects.findIndex((o) => o.id === entry.id)
+    const mesh = getObjectMesh(i)
+    if (mesh) mesh.visible = value
+  }
+
+  function toggleProjection(entry, value) {
+    projectionVis = setVisibilityOverride(projectionVis, entry.id, entry.visible, value)
+    const i = manifest.projections.findIndex((p) => p.id === entry.id)
+    if (viewer.projections[i]) {
+      viewer.projections[i].visible = value
+      viewer.projections[i].projection.visible = value
+
+      // for (const obj of sceneState.objects) {
+      //   if (visible) viewer.projections[i].projection.project(obj.object)
+      //   else viewer.projections[i].projection.unproject(obj.object)
+      // }
+      // console.log(viewer.projections[i])
+      // viewer.projections[i].visible = value
+    }
+  }
+
+  let prevProjectionRef = null
+
+  $effect(() => {
+    if (!viewer || !manifest?.projections) return
+    const ref = projectionRef
+    if (ref) {
+      const idx = manifest.projections.findIndex((p) => p.id === ref)
+      if (idx >= 0 && viewer.projections[idx]) {
+        const { state, up } = projectionPose(viewer.projections[idx].projection)
+        viewer.camera.up.set(up.x, up.y, up.z)
+        viewer.setCameraState(state)
+        fov = state.fov
+        viewer.rig.enabled = false
+      }
+    } else if (prevProjectionRef) {
+      viewer.camera.up.set(0, 1, 0)
+      viewer.rig.enabled = true
+    }
+    prevProjectionRef = ref
+  })
+
+  function handleFovChange(v) {
+    fov = v
+    const c = viewer.getCameraState()
+    viewer.setCameraState({ ...c, fov: v })
+  }
+
   function handleBack() {
-    stopRequested = true
     onCancel()
   }
 
@@ -203,48 +109,65 @@
   }
 
   function handleCapture() {
-    onConfirm(viewer.getCameraState())
+    const visibility = {}
+    if (Object.keys(objectVis).length) visibility.objects = { ...objectVis }
+    if (Object.keys(projectionVis).length) visibility.projections = { ...projectionVis }
+    onConfirm({
+      camera: viewer.getCameraState(),
+      visibility: Object.keys(visibility).length ? visibility : null,
+      projectionRef: projectionRef ?? null,
+    })
   }
 </script>
 
-<div class="relative h-screen w-screen bg-black">
-  <canvas bind:this={canvas} class="h-full w-full"></canvas>
-
-  <div class="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-4">
-    <div>
-      <button
-        class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
-        onclick={handleBack}
-      >
-        {#if previewMode}
-          ✕ Stop
-        {:else}
-          &larr; {captureMode ? 'Cancel' : 'Back'}
-        {/if}
-      </button>
-      {#if !previewMode}
-        <span class="ml-3 text-sm text-neutral-400">{storyboard.current?.name}</span>
-      {/if}
-    </div>
+<div class="flex h-screen w-screen flex-col">
+  <header class="flex items-center px-5 py-2.5">
+    <div class="h-px w-5 bg-black"></div>
+    <button
+      class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
+      onclick={handleBack}
+    >
+      &larr; {captureMode ? 'Cancel' : 'Back'}
+    </button>
+    <div class="h-px w-5 bg-black"></div>
+    <span class="px-2.5 text-sm">{storyboard.current?.name}</span>
+    <div class="h-px flex-1 bg-black"></div>
 
     {#if captureMode}
       <button
-        class="pointer-events-auto cursor-pointer rounded-md bg-blue-600/90 px-3 py-1.5 text-xs text-white backdrop-blur transition hover:bg-blue-500/90"
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 text-brand hover:framed-2.5"
         onclick={handleCapture}
       >
         Capture Position
       </button>
-    {:else if previewMode}
-      <div class="pointer-events-none text-xs text-neutral-400">
-        {previewRunning ? 'Playing…' : 'Done'}
-      </div>
     {:else}
       <button
-        class="pointer-events-auto cursor-pointer rounded-md bg-neutral-900/80 px-3 py-1.5 text-xs text-neutral-300 backdrop-blur transition hover:bg-neutral-800/80"
+        class="flex cursor-pointer items-center gap-1.5 px-2.5 py-0.75 hover:framed-2.5"
         onclick={handleSave}
       >
         Save
       </button>
+    {/if}
+    <div class="h-px w-5 bg-black"></div>
+  </header>
+
+  <div class="relative min-h-0 min-w-0 flex-1">
+    <canvas bind:this={canvas} class="h-full w-full"></canvas>
+
+    {#if captureMode && manifest}
+      {#if projectionRef}
+        <div class="absolute inset-0 cursor-not-allowed"></div>
+      {/if}
+      <CapturePanel
+        {fov}
+        {manifest}
+        {objectVis}
+        onFovChange={handleFovChange}
+        onToggleObject={toggleObject}
+        onToggleProjection={toggleProjection}
+        {projectionVis}
+        bind:projectionRef
+      />
     {/if}
   </div>
 </div>

@@ -2,6 +2,41 @@
 
 @theme {
   --color-brand: var(--color-vantage-brand);
+  --color-brand-deep: color-mix(in srgb, var(--color-brand) 40%, black);
+  --color-brand-dark: color-mix(in srgb, var(--color-brand) 90%, black);
+  --color-brand-bright: color-mix(in srgb, var(--color-brand) 20%, white);
+
+  --color-time: var(--color-vantage-red);
+  --color-scroll: var(--color-vantage-blue);
+}
+
+@utility framed-* {
+  --framed: 5px;
+  --framed: --value(--spacing-*, [length]);
+  --framed: calc(--value(number) * 0.25rem);
+  background:
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)) top left,
+    linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)) top left,
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)) top right,
+    linear-gradient(to bottom, currentColor var(--framed), transparent var(--framed)) top right,
+    linear-gradient(to right, currentColor var(--framed), transparent var(--framed)) bottom left,
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)) bottom left,
+    linear-gradient(to left, currentColor var(--framed), transparent var(--framed)) bottom right,
+    linear-gradient(to top, currentColor var(--framed), transparent var(--framed)) bottom right;
+
+  background-size:
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed),
+    var(--framed) 1px,
+    1px var(--framed);
+
+  background-repeat: no-repeat;
+
+  /* @apply framed; */
 }
 
 * {

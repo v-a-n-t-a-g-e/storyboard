@@ -11,6 +11,21 @@ const recents = createRecentProjects('narrator')
 
 let handle = $state(null)
 let recentList = $state([])
+let loading = $state(false)
+let error = $state(null)
+
+async function withLoading(fn) {
+  loading = true
+  error = null
+  try {
+    await fn()
+  } catch (e) {
+    console.error(e)
+    error = e instanceof Error ? e.message : String(e)
+  } finally {
+    loading = false
+  }
+}
 
 export const project = {
   get handle() {
@@ -22,31 +37,49 @@ export const project = {
   get hasNativeFS() {
     return supportsNativeFS()
   },
+  get loading() {
+    return loading
+  },
+  get error() {
+    return error
+  },
+
+  clearError() {
+    error = null
+  },
 
   async refreshRecents() {
     recentList = await recents.get()
   },
 
   async open() {
-    const h = await openProject()
-    if (h) await this.loadHandle(h)
+    await withLoading(async () => {
+      const h = await openProject()
+      if (h) await this.loadHandle(h)
+    })
   },
 
   async importFile() {
-    const h = await importProject()
-    if (h) await this.loadHandle(h)
+    await withLoading(async () => {
+      const h = await importProject()
+      if (h) await this.loadHandle(h)
+    })
   },
 
   async drop(event) {
-    const h = await onProjectDrop(event)
-    if (h) await this.loadHandle(h)
+    await withLoading(async () => {
+      const h = await onProjectDrop(event)
+      if (h) await this.loadHandle(h)
+    })
   },
 
   async openRecent(recent) {
-    const perm = await recent.handle.requestPermission({ mode: 'readwrite' })
-    if (perm !== 'granted') return
-    const h = createHandleFromDirectory(recent.handle)
-    await this.loadHandle(h)
+    await withLoading(async () => {
+      const perm = await recent.handle.requestPermission({ mode: 'readwrite' })
+      if (perm !== 'granted') return
+      const h = createHandleFromDirectory(recent.handle)
+      await this.loadHandle(h)
+    })
   },
 
   async loadHandle(h) {

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.module.js",
+          "three/addons/": "./vendor/three-addons/",
+          "@krisenstab/vantage": "./vendor/vantage.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+      // Mode dispatch:
+      //   ?mode=slideshow  → time-driven stepped slideshow (default)
+      //   ?mode=scrolly    → scroll-driven scrollytelling
+      //   ?preview=1       → embedded mode, parent talks via postMessage
+      // Hand-edit the runtime files (slideshow.js / scrolly.js) to customise behavior.
+      const params = new URLSearchParams(location.search)
+      const mode = params.get('mode') === 'scrolly' ? 'scrolly' : 'slideshow'
+      const isPreview = params.get('preview') === '1'
+      const mod = await import(`./${mode}.js`)
+      mod.start({ isPreview })
+    </script>
+  </body>
+</html>

@@ -5,12 +5,14 @@
   import SplashScreen from './lib/SplashScreen.svelte'
   import SlideGrid from './lib/SlideGrid.svelte'
   import Viewer from './lib/Viewer.svelte'
+  import PreviewFrame from './lib/PreviewFrame.svelte'
 
   // Viewer navigation state
   let viewerOpen = $state(false)
   let viewerMode = $state('new') // 'new' | 'edit'
   let viewerSlideIndex = $state(null)
-  let previewOpen = $state(false)
+  /** @type {'time' | 'scroll' | null} */
+  let previewKind = $state(null)
 
   // Auto-open last modified storyboard when a project is opened
   $effect(() => {
@@ -38,14 +40,14 @@
     viewerOpen = true
   }
 
-  function handleViewerConfirm(camera) {
+  function handleViewerConfirm(payload) {
     if (viewerMode === 'new') {
-      const slide = storyboard.insertSlide(viewerSlideIndex, camera)
-      thumbnailStore.generateOne(project.handle, slide.id, camera)
+      const slide = storyboard.insertSlide(viewerSlideIndex, payload)
+      thumbnailStore.generateOne(project.handle, slide)
     } else {
+      storyboard.updateSlide(viewerSlideIndex, payload)
       const slide = storyboard.current.slides[viewerSlideIndex]
-      storyboard.updateSlide(viewerSlideIndex, camera)
-      thumbnailStore.generateOne(project.handle, slide.id, camera)
+      thumbnailStore.generateOne(project.handle, slide)
     }
     viewerOpen = false
   }
@@ -54,12 +56,8 @@
     viewerOpen = false
   }
 
-  function handlePreviewDone() {
-    previewOpen = false
-  }
-
   function handlePreviewCancel() {
-    previewOpen = false
+    previewKind = null
   }
 
   // Reset viewer state when storyboard is cleared
@@ -68,7 +66,7 @@
       viewerOpen = false
       viewerSlideIndex = null
       viewerMode = 'new'
-      previewOpen = false
+      previewKind = null
     }
   })
 
@@ -77,6 +75,13 @@
       return storyboard.current?.slides[viewerSlideIndex]?.camera ?? null
     }
     return storyboard.current?.slides.at(-1)?.camera ?? null
+  }
+
+  function getInitialSlide() {
+    if (viewerMode === 'edit') {
+      return storyboard.current?.slides[viewerSlideIndex] ?? null
+    }
+    return null
   }
 </script>
 
@@ -93,20 +98,16 @@
   <SplashScreen />
 {:else if storyboard.loading || !storyboard.current}
   <!-- Loading: project open but storyboard not yet resolved -->
-  <div class="flex h-screen w-screen items-center justify-center bg-neutral-950">
+  <div class="flex h-screen w-screen items-center justify-center">
     <span class="text-sm text-neutral-600">Opening…</span>
   </div>
-{:else if previewOpen}
-  <Viewer
-    onCancel={handlePreviewCancel}
-    onPreviewDone={handlePreviewDone}
-    previewMode={true}
-    slides={storyboard.current.slides}
-  />
+{:else if previewKind === 'time' || previewKind === 'scroll'}
+  <PreviewFrame mode={previewKind} onCancel={handlePreviewCancel} />
 {:else if viewerOpen}
   <Viewer
     captureMode={true}
     initialCamera={getInitialCamera()}
+    initialSlide={getInitialSlide()}
     onCancel={handleViewerCancel}
     onConfirm={handleViewerConfirm}
   />
@@ -114,7 +115,6 @@
   <SlideGrid
     onNewSlide={handleNewSlide}
     onOpenSlide={handleOpenSlide}
-    onPreview={() => (previewOpen = true)}
+    onPreview={(kind) => (previewKind = kind)}
   />
 {/if}
-

@@ -1,6 +1,6 @@
-/** @typedef {'ease-in-out'|'ease-in'|'ease-out'|'linear'|'continuous'} Easing */
-/** @typedef {{ duration: number, easing: Easing }} Transition */
-/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string }} Slide */
+/** @typedef {{ duration: number, vh: number, continuous: boolean }} Transition */
+/** @typedef {{ objects?: Record<string, boolean>, projections?: Record<string, boolean> }} VisibilityOverrides */
+/** @typedef {{ id: string, camera: { position: [number, number, number], target: [number, number, number], fov: number }, transition: Transition, title: string, description: string, visibility?: VisibilityOverrides, projectionRef?: string | null }} Slide */
 /** @typedef {{ id: string, name: string, slides: Slide[], lastModified?: string }} StoryboardData */
 
 import { SvelteDate } from 'svelte/reactivity'
@@ -38,7 +38,7 @@ export const storyboard = {
       try {
         const file = await handle.fs.readFile(STORE_PATH)
         const data = JSON.parse(await file.text())
-        all = data.storyboards ?? []
+        all = (data.storyboards ?? []).map(migrateBoard)
       } catch {
         // Try migrating from old per-file format
         all = await migrateFromOldFormat(handle)
@@ -54,7 +54,7 @@ export const storyboard = {
     return all.reduce((a, b) => ((a.lastModified ?? '') >= (b.lastModified ?? '') ? a : b)).id
   },
 
-  /** Create a new storyboard, open it, and save. */
+  /** Create a new storyboard and open it. */
   async createBoard(handle, name) {
     dirty = false
     /** @type {StoryboardData} */
@@ -67,33 +67,53 @@ export const storyboard = {
     all = [...all, board]
     current = board
     currentId = board.id
-    await writeAll(handle)
+    dirty = true
   },
 
   /** Open a storyboard by id (sync — data already loaded). */
   openBoard(id) {
+    syncCurrentToAll()
     const board = all.find((b) => b.id === id)
     if (!board) return
     current = board
     currentId = id
-    dirty = false
   },
 
-  /** Delete a storyboard by id and save. */
+  /** Duplicate a storyboard and open the copy. */
+  async duplicateBoard(handle, id) {
+    const source = all.find((b) => b.id === id)
+    if (!source) return
+    dirty = false
+    /** @type {StoryboardData} */
+    const board = {
+      id: crypto.randomUUID(),
+      name: `${source.name} Copy`,
+      slides: source.slides.map((s) => ({ ...s, id: crypto.randomUUID() })),
+      lastModified: new SvelteDate().toISOString(),
+    }
+    all = [...all, board]
+    current = board
+    currentId = board.id
+    dirty = true
+  },
+
+  /** Delete a storyboard by id. */
   async deleteBoard(handle, id) {
     all = all.filter((b) => b.id !== id)
     if (currentId === id) {
       current = null
       currentId = null
     }
-    await writeAll(handle)
+    // await writeAll(handle)
+    dirty = true
   },
 
-  /** Rename a storyboard and save. */
+  /** Rename a storyboard. */
   async renameBoard(handle, id, name) {
     all = all.map((b) => (b.id === id ? { ...b, name } : b))
     if (currentId === id) current = { ...current, name }
-    await writeAll(handle)
+    // await writeAll(handle)
+    dirty = true
   },
 
   /**
@@ -103,27 +123,46 @@ export const storyboard = {
   async save(handle) {
     if (current && currentId) {
       const now = new SvelteDate().toISOString()
-      all = all.map((b) => (b.id === currentId ? { ...b, ...current, lastModified: now } : b))
+      current = { ...current, lastModified: now }
     }
+    syncCurrentToAll()
     await writeAll(handle)
     dirty = false
   },
 
-  /** Insert a new slide after `afterIndex` (-1 to prepend). Returns the new slide. */
-  insertSlide(afterIndex, camera) {
+  /**
+   * Insert a new slide after `afterIndex` (-1 to prepend). `payload` may be either a
+   * camera object (legacy) or a partial slide `{ camera, visibility?, projectionRef? }`.
+   * Returns the new slide.
+   */
+  insertSlide(afterIndex, payload) {
+    const patch = payload && 'camera' in payload ? payload : { camera: payload }
     /** @type {Slide} */
     const slide = {
       id: crypto.randomUUID(),
-      camera,
-      transition: { duration: 1, easing: 'ease-in-out' },
+      camera: patch.camera,
+      transition: { duration: 1, vh: 75, continuous: false },
       title: '',
       description: '',
+      ...(patch.visibility ? { visibility: patch.visibility } : {}),
+      ...(patch.projectionRef ? { projectionRef: patch.projectionRef } : {}),
     }
     const slides = [...current.slides]
     slides.splice(afterIndex + 1, 0, slide)
     current = { ...current, slides }
     dirty = true
     return slide
+  },
+
+  /** Duplicate the slide at `index`, inserting the copy immediately after it. Returns the new slide id. */
+  duplicateSlide(index) {
+    const source = current.slides[index]
+    const copy = { ...source, id: crypto.randomUUID() }
+    const slides = [...current.slides]
+    slides.splice(index + 1, 0, copy)
+    current = { ...current, slides }
+    dirty = true
+    return copy.id
   },
 
   /** Delete the slide at `index`. */
@@ -140,9 +179,34 @@ export const storyboard = {
     dirty = true
   },
 
-  /** Update the camera of the slide at `index`. */
-  updateSlide(index, camera) {
-    const slides = current.slides.map((s, i) => (i === index ? { ...s, camera } : s))
+  /**
+   * Update the slide at `index`. `payload` may be a camera object (legacy) or a
+   * partial slide `{ camera?, visibility?, projectionRef? }`. `projectionRef: null`
+   * clears the link.
+   */
+  updateSlide(index, payload) {
+    const patch = payload && 'camera' in payload ? payload : { camera: payload }
+    const slides = current.slides.map((s, i) => {
+      if (i !== index) return s
+      const next = { ...s }
+      if (patch.camera) next.camera = patch.camera
+      if ('visibility' in patch) {
+        if (patch.visibility) next.visibility = patch.visibility
+        else delete next.visibility
+      }
+      if ('projectionRef' in patch) {
+        if (patch.projectionRef) next.projectionRef = patch.projectionRef
+        else delete next.projectionRef
+      }
+      return next
+    })
+    current = { ...current, slides }
+    dirty = true
+  },
+
+  /** Update the description of the slide at `index`. */
+  updateDescription(index, description) {
+    const slides = current.slides.map((s, i) => (i === index ? { ...s, description } : s))
     current = { ...current, slides }
     dirty = true
   },
@@ -157,8 +221,8 @@ export const storyboard = {
     const adjusted = insertAt > fromIndex ? insertAt - 1 : insertAt
     slides.splice(adjusted, 0, removed)
     // First slide can't be a waypoint
-    if (slides[0].transition?.easing === 'continuous') {
-      slides[0] = { ...slides[0], transition: { ...slides[0].transition, easing: 'ease-in-out' } }
+    if (slides[0].transition?.continuous) {
+      slides[0] = { ...slides[0], transition: { ...slides[0].transition, continuous: false } }
     }
     current = { ...current, slides }
     dirty = true
@@ -174,9 +238,28 @@ export const storyboard = {
   },
 }
 
+/** Sync current board state into all (in-memory only, no disk write). */
+function syncCurrentToAll() {
+  if (current && currentId) {
+    all = all.map((b) => (b.id === currentId ? { ...b, ...current } : b))
+  }
+}
+
 /** Write the full storyboards array to storyboards.json. */
 async function writeAll(handle) {
   await handle.fs.writeFile(STORE_PATH, JSON.stringify({ storyboards: all }, null, 2))
+}
+
+/** Migrate a board's slide transitions from the old easing-string format to the new boolean format. */
+function migrateBoard(board) {
+  return {
+    ...board,
+    slides: board.slides.map((s) => {
+      if (!s.transition || typeof s.transition.continuous === 'boolean') return s
+      const { easing, ...rest } = s.transition
+      return { ...s, transition: { ...rest, continuous: easing === 'continuous' } }
+    }),
+  }
 }
 
 /** Attempt to migrate from the old per-file format. Returns [] if not found. */

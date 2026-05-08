@@ -15,6 +15,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      $preview: fileURLToPath(new URL('./public/preview', import.meta.url)),
     },
     dedupe: ['three'],
   },
