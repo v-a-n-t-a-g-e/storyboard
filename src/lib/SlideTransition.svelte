@@ -21,52 +21,7 @@
   function toggleContinuous() {
     storyboard.updateTransition(index, { ...tr, continuous: !tr.continuous })
   }
-
-  const chevrons = [
-    { x: -185 },
-    { x: -175 },
-    { x: -165 },
-    { x: -155 },
-    { x: -5 },
-    { x: 5 },
-    { x: 15 },
-    { x: 25 },
-    { x: 35 },
-    { x: 45 },
-    { x: 55 },
-    { x: 65 },
-    { x: 75 },
-    { x: 85 },
-    { x: 95 },
-    { x: 105 },
-    { x: 115 },
-    { x: 125 },
-    { x: 135 },
-    { x: 145 },
-  ]
-  // : [105]
 </script>
-
-<!-- <button
-  class="absolute left-0 -translate-x-5 cursor-pointer text-neutral-200 hover:text-black"
-  class:text-brand!={isContinuous}
-  onclick={!isLast
-    ? (e) => {
-        e.stopPropagation()
-        toggleContinuous()
-      }
-    : undefined}
-  title={!isLast
-    ? isContinuous
-      ? 'Continuous (click to use transition)'
-      : 'Transition (click for continuous)'
-    : undefined}
->
-  <svg height="20" width="75">
-    <path d="M5,2.5 L12.5,10 L5,17.5" fill="none" stroke="currentColor"></path>
-    <path d="M17.5,2.5 L25,10 L17.5,17.5" fill="none" stroke="currentColor"></path>
-  </svg>
-</button> -->
 
 <div
   class="flex h-full w-25 flex-col justify-center gap-2.5 py-1.5 pl-2.5 transition-colors"
