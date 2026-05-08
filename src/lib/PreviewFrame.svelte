@@ -104,7 +104,7 @@
   <iframe bind:this={iframe} class="h-full w-full border-0" {src} title="Preview"></iframe>
   <header
     class="absolute inset-x-0 top-0 flex items-center px-5 py-2.5 {previewMode !== 'scrolly' &&
-      'w-[calc(100vw-390px)]'}"
+      'lg:w-[calc(100vw-390px)]'}"
   >
     <div class="h-px w-5 bg-black"></div>
     <div class="hover:bg-white">
