@@ -72,7 +72,6 @@ export function buildSegments(slides) {
 export function prepareSplineSegment(cameras, weights) {
   const N = cameras.length
   const posCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.position)))
-  const tgtCurve = new CatmullRomCurve3(cameras.map((c) => new Vector3(...c.target)))
 
   const total = weights.reduce((a, b) => a + b, 0) || 1
   const timeFrac = [0]
@@ -93,18 +92,19 @@ export function prepareSplineSegment(cameras, weights) {
 
   return {
     posCurve,
-    tgtCurve,
     timeFrac,
     arcFrac,
     fovStart: cameras[0].fov,
     fovEnd: cameras[N - 1].fov,
     ups: cameras.map((c) => c.up ?? [0, 1, 0]),
+    dirs: cameras.map((c) => normalizeVec3(c.target.map((v, i) => v - c.position[i]))),
+    dists: cameras.map((c) => Math.sqrt(c.target.reduce((s, v, i) => s + (v - c.position[i]) ** 2, 0))),
   }
 }
 
 /** Sample a prepared spline segment at progress t ∈ [0,1]. */
 export function splineCameraAt(prepared, t) {
-  const { posCurve, tgtCurve, timeFrac, arcFrac, fovStart, fovEnd, ups } = prepared
+  const { posCurve, timeFrac, arcFrac, fovStart, fovEnd, ups, dirs, dists } = prepared
   const last = timeFrac.length - 2
   let seg = 0
   while (seg < last && t >= timeFrac[seg + 1]) seg++
@@ -112,12 +112,13 @@ export function splineCameraAt(prepared, t) {
   const tLocal = span > 0 ? (t - timeFrac[seg]) / span : 1
   const u = Math.max(0, Math.min(1, arcFrac[seg] + tLocal * (arcFrac[seg + 1] - arcFrac[seg])))
   const pos = posCurve.getPointAt(u)
-  const tgt = tgtCurve.getPointAt(u)
+  const dir = slerpVec3(dirs[seg], dirs[seg + 1], tLocal)
+  const dist = dists[seg] + (dists[seg + 1] - dists[seg]) * tLocal
   const upA = ups[seg]
   const upB = ups[seg + 1]
   return {
     position: /** @type {[number,number,number]} */ ([pos.x, pos.y, pos.z]),
-    target: /** @type {[number,number,number]} */ ([tgt.x, tgt.y, tgt.z]),
+    target: /** @type {[number,number,number]} */ ([pos.x + dir[0] * dist, pos.y + dir[1] * dist, pos.z + dir[2] * dist]),
     fov: fovStart + (fovEnd - fovStart) * t,
     up: normalizeVec3(upA.map((v, i) => v + (upB[i] - v) * tLocal)),
   }
