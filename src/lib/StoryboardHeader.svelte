@@ -107,7 +107,7 @@
   {#if dropdownOpen}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <section class="flex gap-5 px-6" onclick={(e) => e.stopPropagation()}>
+    <section class="flex gap-5 px-5" onclick={(e) => e.stopPropagation()}>
       <div class="flex min-w-48 flex-col items-start gap-0.5">
         <span class="px-2.5 text-xs text-neutral-600">Project</span>
         <button class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5" onclick={handleCreateBoard}>
