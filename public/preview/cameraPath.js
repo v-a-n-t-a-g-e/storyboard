@@ -7,17 +7,38 @@ function normalizeVec3(v) {
   return /** @type {[number,number,number]} */ ([v[0] / len, v[1] / len, v[2] / len])
 }
 
+function slerpVec3(a, b, t) {
+  const dot = Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))
+  if (dot > 0.9999) return normalizeVec3([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t])
+  // Antiparallel: pick an arbitrary perpendicular axis
+  if (dot < -0.9999) {
+    const perp = Math.abs(a[0]) < 0.9 ? normalizeVec3([0, -a[2], a[1]]) : normalizeVec3([-a[2], 0, a[0]])
+    const half = normalizeVec3([a[0] + perp[0], a[1] + perp[1], a[2] + perp[2]])
+    return slerpVec3(slerpVec3(a, half, t * 2 <= 1 ? t * 2 : 1), b, t * 2 > 1 ? (t * 2 - 1) : 0)
+  }
+  const theta = Math.acos(dot)
+  const sinTheta = Math.sin(theta)
+  const wa = Math.sin((1 - t) * theta) / sinTheta
+  const wb = Math.sin(t * theta) / sinTheta
+  return /** @type {[number,number,number]} */ ([wa * a[0] + wb * b[0], wa * a[1] + wb * b[1], wa * a[2] + wb * b[2]])
+}
+
 /** Lerp between two camera states. */
 export function lerpCamera(from, to, t) {
   const fromUp = from.up ?? [0, 1, 0]
   const toUp = to.up ?? [0, 1, 0]
+  const position = /** @type {[number,number,number]} */ (
+    from.position.map((v, i) => v + (to.position[i] - v) * t)
+  )
+  const fromDir = normalizeVec3(from.target.map((v, i) => v - from.position[i]))
+  const toDir = normalizeVec3(to.target.map((v, i) => v - to.position[i]))
+  const fromDist = Math.sqrt(from.target.reduce((s, v, i) => s + (v - from.position[i]) ** 2, 0))
+  const toDist = Math.sqrt(to.target.reduce((s, v, i) => s + (v - to.position[i]) ** 2, 0))
+  const dist = fromDist + (toDist - fromDist) * t
+  const dir = slerpVec3(fromDir, toDir, t)
   return {
-    position: /** @type {[number,number,number]} */ (
-      from.position.map((v, i) => v + (to.position[i] - v) * t)
-    ),
-    target: /** @type {[number,number,number]} */ (
-      from.target.map((v, i) => v + (to.target[i] - v) * t)
-    ),
+    position,
+    target: /** @type {[number,number,number]} */ (position.map((v, i) => v + dir[i] * dist)),
     fov: from.fov + (to.fov - from.fov) * t,
     up: normalizeVec3(fromUp.map((v, i) => v + (toUp[i] - v) * t)),
   }
