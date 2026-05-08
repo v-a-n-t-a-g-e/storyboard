@@ -8,7 +8,6 @@
     objectVis,
     projectionVis,
     onFovChange,
-    onPose,
     onToggleObject,
     onToggleProjection,
   } = $props()
@@ -19,9 +18,10 @@
 >
   <section>
     <div class="mb-1 text-neutral-600">Field of view</div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 disabled:opacity-40" class:opacity-40={projectionRef}>
       <input
         class="flex-1"
+        disabled={!!projectionRef}
         max="120"
         min="10"
         oninput={(e) => onFovChange(Number(e.currentTarget.value))}
@@ -31,6 +31,7 @@
       />
       <input
         class="w-14 framed-2.5 px-1.5 py-0.5 text-right focus:outline-none"
+        disabled={!!projectionRef}
         max="120"
         min="10"
         oninput={(e) => onFovChange(Number(e.currentTarget.value))}
@@ -43,23 +44,13 @@
 
   {#if (manifest.projections ?? []).length > 0}
     <section>
-      <div class="mb-1 text-neutral-600">Camera from projection</div>
-      <div class="flex items-center gap-2">
-        <select class="flex-1 px-1.5 py-1 focus:outline-none" bind:value={projectionRef}>
-          <option value={null}>(none — manual)</option>
-          {#each manifest.projections as p (p.id)}
-            <option value={p.id}>{p.name}</option>
-          {/each}
-        </select>
-        <button
-          class="cursor-pointer px-2.5 py-0.75 hover:framed-2.5 disabled:pointer-events-none disabled:opacity-40"
-          disabled={!projectionRef}
-          onclick={onPose}
-          title="Snap viewer camera to projection pose"
-        >
-          Pose
-        </button>
-      </div>
+      <div class="mb-1 text-neutral-600">Camera</div>
+      <select class="w-full px-1.5 py-1 focus:outline-none" bind:value={projectionRef}>
+        <option value={null}>Free camera</option>
+        {#each manifest.projections as p (p.id)}
+          <option value={p.id}>{p.name}</option>
+        {/each}
+      </select>
     </section>
   {/if}
 

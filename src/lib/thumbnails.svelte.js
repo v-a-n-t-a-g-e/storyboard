@@ -70,7 +70,9 @@ function waitFrame() {
 
 async function captureSlide(slide) {
   applySlideState(viewer, manifest, slide)
-  viewer.setCameraState(resolveCamera(viewer, manifest, slide))
+  const cam = resolveCamera(viewer, manifest, slide)
+  viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+  viewer.setCameraState(cam)
   await waitFrame()
   await waitFrame() // two frames for the renderer to settle
   thumbnails[slide.id] = canvas.toDataURL('image/jpeg', 0.92)

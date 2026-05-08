@@ -103,12 +103,16 @@ export async function start({ isPreview }) {
 
     if (cameras.length === 2) {
       await rafLoop(totalMs, (raw) => {
-        viewer.setCameraState(lerpCamera(cameras[0], cameras[1], easeInOut(raw)))
+        const cam = lerpCamera(cameras[0], cameras[1], easeInOut(raw))
+        viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+        viewer.setCameraState(cam)
       })
     } else {
       const prepared = prepareSplineSegment(cameras, subDurMs)
       await rafLoop(totalMs, (raw) => {
-        viewer.setCameraState(splineCameraAt(prepared, easeInOut(raw)))
+        const cam = splineCameraAt(prepared, easeInOut(raw))
+        viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+        viewer.setCameraState(cam)
       })
     }
 
@@ -125,10 +129,15 @@ export async function start({ isPreview }) {
   // ── Init ──────────────────────────────────────────────────────────
   viewer.beginPlayback?.()
   recompute()
-  if (slides.length > 0) {
+  function applyInitialCamera() {
+    if (slides.length === 0) return
     applySlideState(viewer, manifest, slides[0])
-    viewer.setCameraState(resolveCamera(viewer, manifest, slides[0]))
+    const cam = resolveCamera(viewer, manifest, slides[0])
+    viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+    viewer.setCameraState(cam)
   }
+
+  applyInitialCamera()
 
   boot.onUpdate((next) => {
     slides = next
@@ -139,10 +148,7 @@ export async function start({ isPreview }) {
       stopIdx = 0
       playing = false
       recompute()
-      if (slides.length > 0) {
-        applySlideState(viewer, manifest, slides[0])
-        viewer.setCameraState(resolveCamera(viewer, manifest, slides[0]))
-      }
+      applyInitialCamera()
     })
   })
 

@@ -1,9 +1,16 @@
 import { CatmullRomCurve3, Vector3 } from 'three'
 
-/** @typedef {{ position: [number,number,number], target: [number,number,number], fov: number }} CameraState */
+/** @typedef {{ position: [number,number,number], target: [number,number,number], fov: number, up?: [number,number,number] }} CameraState */
+
+function normalizeVec3(v) {
+  const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1
+  return /** @type {[number,number,number]} */ ([v[0] / len, v[1] / len, v[2] / len])
+}
 
 /** Lerp between two camera states. */
 export function lerpCamera(from, to, t) {
+  const fromUp = from.up ?? [0, 1, 0]
+  const toUp = to.up ?? [0, 1, 0]
   return {
     position: /** @type {[number,number,number]} */ (
       from.position.map((v, i) => v + (to.position[i] - v) * t)
@@ -12,6 +19,7 @@ export function lerpCamera(from, to, t) {
       from.target.map((v, i) => v + (to.target[i] - v) * t)
     ),
     fov: from.fov + (to.fov - from.fov) * t,
+    up: normalizeVec3(fromUp.map((v, i) => v + (toUp[i] - v) * t)),
   }
 }
 
@@ -69,12 +77,13 @@ export function prepareSplineSegment(cameras, weights) {
     arcFrac,
     fovStart: cameras[0].fov,
     fovEnd: cameras[N - 1].fov,
+    ups: cameras.map((c) => c.up ?? [0, 1, 0]),
   }
 }
 
 /** Sample a prepared spline segment at progress t ∈ [0,1]. */
 export function splineCameraAt(prepared, t) {
-  const { posCurve, tgtCurve, timeFrac, arcFrac, fovStart, fovEnd } = prepared
+  const { posCurve, tgtCurve, timeFrac, arcFrac, fovStart, fovEnd, ups } = prepared
   const last = timeFrac.length - 2
   let seg = 0
   while (seg < last && t >= timeFrac[seg + 1]) seg++
@@ -83,9 +92,12 @@ export function splineCameraAt(prepared, t) {
   const u = Math.max(0, Math.min(1, arcFrac[seg] + tLocal * (arcFrac[seg + 1] - arcFrac[seg])))
   const pos = posCurve.getPointAt(u)
   const tgt = tgtCurve.getPointAt(u)
+  const upA = ups[seg]
+  const upB = ups[seg + 1]
   return {
     position: /** @type {[number,number,number]} */ ([pos.x, pos.y, pos.z]),
     target: /** @type {[number,number,number]} */ ([tgt.x, tgt.y, tgt.z]),
     fov: fovStart + (fovEnd - fovStart) * t,
+    up: normalizeVec3(upA.map((v, i) => v + (upB[i] - v) * tLocal)),
   }
 }

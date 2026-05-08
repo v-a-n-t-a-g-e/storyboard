@@ -114,11 +114,14 @@ export async function start({ isPreview }) {
     }
     const seg = segData[segIdx]
     const t = clamp01((scrollVh - seg.startVh) / Math.max(1e-6, seg.segVh))
+    let cam
     if (seg.kind === 'lerp') {
-      viewer.setCameraState(lerpCamera(seg.cameras[0], seg.cameras[1], t))
+      cam = lerpCamera(seg.cameras[0], seg.cameras[1], t)
     } else {
-      viewer.setCameraState(splineCameraAt(seg.prepared, t))
+      cam = splineCameraAt(seg.prepared, t)
     }
+    viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
+    viewer.setCameraState(cam)
 
     // Apply the closing slide's visibility once we cross into a new segment.
     if (segIdx !== lastAppliedSegIdx) {
@@ -135,7 +138,9 @@ export async function start({ isPreview }) {
   recompute()
   if (slides.length > 0) {
     applySlideState(viewer, manifest, slides[0])
-    viewer.setCameraState(resolveCamera(viewer, manifest, slides[0]))
+    const initCam = resolveCamera(viewer, manifest, slides[0])
+    viewer.camera.up.set(...(initCam.up ?? [0, 1, 0]))
+    viewer.setCameraState(initCam)
   }
   update()
 

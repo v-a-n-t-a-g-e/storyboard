@@ -63,8 +63,6 @@
       viewer.projections[i].visible = value
       viewer.projections[i].projection.visible = value
 
-      console.log(viewer)
-
       // for (const obj of sceneState.objects) {
       //   if (visible) viewer.projections[i].projection.project(obj.object)
       //   else viewer.projections[i].projection.unproject(obj.object)
@@ -74,17 +72,31 @@
     }
   }
 
+  let prevProjectionRef = null
+
+  $effect(() => {
+    if (!viewer || !manifest?.projections) return
+    const ref = projectionRef
+    if (ref) {
+      const idx = manifest.projections.findIndex((p) => p.id === ref)
+      if (idx >= 0 && viewer.projections[idx]) {
+        const { state, up } = projectionPose(viewer.projections[idx].projection)
+        viewer.camera.up.set(up.x, up.y, up.z)
+        viewer.setCameraState(state)
+        fov = state.fov
+        viewer.rig.enabled = false
+      }
+    } else if (prevProjectionRef) {
+      viewer.camera.up.set(0, 1, 0)
+      viewer.rig.enabled = true
+    }
+    prevProjectionRef = ref
+  })
+
   function handleFovChange(v) {
     fov = v
     const c = viewer.getCameraState()
     viewer.setCameraState({ ...c, fov: v })
-  }
-
-  function handlePose() {
-    if (!projectionRef || !manifest?.projections) return
-    const idx = manifest.projections.findIndex((p) => p.id === projectionRef)
-    if (idx < 0 || !viewer.projections[idx]) return
-    viewer.setCameraState(projectionPose(viewer.projections[idx].projection, fov))
   }
 
   function handleBack() {
@@ -143,12 +155,14 @@
     <canvas bind:this={canvas} class="h-full w-full"></canvas>
 
     {#if captureMode && manifest}
+      {#if projectionRef}
+        <div class="absolute inset-0 cursor-not-allowed"></div>
+      {/if}
       <CapturePanel
         {fov}
         {manifest}
         {objectVis}
         onFovChange={handleFovChange}
-        onPose={handlePose}
         onToggleObject={toggleObject}
         onToggleProjection={toggleProjection}
         {projectionVis}
