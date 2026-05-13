@@ -62,7 +62,10 @@
     {:else if project.error}
       <div>
         <p class="text-balance text-pink-600">{friendlyError(project.error)}</p>
-        <button class="cursor-pointer hover:bg-brand/20" onclick={() => project.clearError()}>
+        <button
+          class="mt-2.5 -ml-2.5 cursor-pointer px-2.5 py-0.5 hover:framed-2.5"
+          onclick={() => project.clearError()}
+        >
           Try again
         </button>
       </div>
@@ -71,12 +74,12 @@
 
       <div class=" text-xs text-neutral-600">
         or pick a
-        <button class="cursor-pointer underline hover:bg-brand/20" onclick={() => project.open()}>
+        <button class="cursor-pointer underline hover:text-brand" onclick={() => project.open()}>
           folder
         </button>
         /
         <button
-          class="cursor-pointer underline hover:bg-brand/20"
+          class="cursor-pointer underline hover:text-brand"
           onclick={() => project.importFile()}
         >
           file
@@ -90,10 +93,10 @@
   {#if project.recents.length > 0}
     <div class=" flex w-full max-w-100 flex-col items-start space-y-2.5 bg-black p-10 text-white">
       <h2 class="text-xs">Recent Projects</h2>
-      <div class="flex flex-wrap gap-x-2">
+      <div class="-ml-2.5 flex flex-wrap gap-x-2 gap-y-0.5">
         {#each project.recents as recent, index (index)}
           <button
-            class="-mx-1 max-w-82 min-w-0 cursor-pointer overflow-hidden px-1 text-nowrap text-ellipsis after:content-[','] last-of-type:after:content-none hover:bg-brand-bright hover:text-black"
+            class="max-w-82 min-w-0 cursor-pointer overflow-hidden px-2.5 py-0.75 text-nowrap text-ellipsis hover:framed-2.5"
             onclick={() => project.openRecent(recent)}
           >
             {recent.name}

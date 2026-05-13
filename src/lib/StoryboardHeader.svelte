@@ -73,7 +73,7 @@
   }
 </script>
 
-<header class="flex flex-col px-5">
+<header class="flex flex-col px-5 pb-2.5">
   <div class="flex items-center py-2.5">
     <div class="h-px w-5 bg-black"></div>
     <button
