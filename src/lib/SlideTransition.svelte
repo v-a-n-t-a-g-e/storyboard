@@ -9,7 +9,7 @@
   const isContinuous = $derived(tr.continuous)
 
   function handleDurationChange(raw) {
-    const duration = Math.max(0.1, parseFloat(raw) || 1)
+    const duration = Math.max(0, parseFloat(raw) || 0)
     storyboard.updateTransition(index, { ...tr, duration })
   }
 
@@ -34,7 +34,7 @@
       <span class="w-5 text-xs">s</span>
       <input
         class="w-10 [appearance:textfield] px-1 py-0.5 text-right text-xs text-black focus:bg-white focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        min="0.1"
+        min="0"
         onchange={(e) => {
           e.stopPropagation()
           handleDurationChange(e.currentTarget.value)
