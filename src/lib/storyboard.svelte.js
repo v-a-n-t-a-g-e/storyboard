@@ -158,6 +158,7 @@ export const storyboard = {
   duplicateSlide(index) {
     const source = current.slides[index]
     const copy = { ...source, id: crypto.randomUUID() }
+    copy.description = ''
     const slides = [...current.slides]
     slides.splice(index + 1, 0, copy)
     current = { ...current, slides }
