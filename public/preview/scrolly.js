@@ -49,12 +49,17 @@ export async function start({ isPreview }) {
       const subVh = seg.slice(0, -1).map((s) => s.transition?.vh ?? 75)
       const segVh = subVh.reduce((a, b) => a + b, 0)
       const startVh = cumVh
+      const total = segVh || 1
+      let cumFrac = 0
+      const subFracs = [0]
+      for (const vh of subVh) { cumFrac += vh; subFracs.push(cumFrac / total) }
       if (cameras.length === 2) {
-        segData.push({ kind: 'lerp', cameras, slides: seg, startVh, segVh })
+        segData.push({ kind: 'lerp', cameras, subFracs, slides: seg, startVh, segVh })
       } else {
         segData.push({
           kind: 'spline',
           prepared: prepareSplineSegment(cameras, subVh),
+          subFracs,
           slides: seg,
           startVh,
           segVh,
@@ -93,6 +98,7 @@ export async function start({ isPreview }) {
   // Track which segment's stop-state we last applied, so we update
   // visibility overrides as the user scrolls between segments.
   let lastAppliedSegIdx = -1
+  let lastAppliedWaypointIdx = -1
 
   function update() {
     if (segData.length === 0) return
@@ -114,10 +120,15 @@ export async function start({ isPreview }) {
     viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
     viewer.setCameraState(cam)
 
-    // Apply the closing slide's visibility once we cross into a new segment.
-    if (segIdx !== lastAppliedSegIdx) {
+    // Apply visibility when crossing into a new segment or a new waypoint within the segment.
+    let waypointIdx = 0
+    for (let i = 1; i < seg.subFracs.length - 1; i++) {
+      if (t >= seg.subFracs[i]) waypointIdx = i
+    }
+    if (segIdx !== lastAppliedSegIdx || waypointIdx !== lastAppliedWaypointIdx) {
       lastAppliedSegIdx = segIdx
-      applySlideState(viewer, manifest, seg.slides[0])
+      lastAppliedWaypointIdx = waypointIdx
+      applySlideState(viewer, manifest, seg.slides[waypointIdx])
     }
   }
 
@@ -138,6 +149,7 @@ export async function start({ isPreview }) {
   boot.onUpdate((next) => {
     slides = next
     lastAppliedSegIdx = -1
+    lastAppliedWaypointIdx = -1
     recompute()
     update()
   })

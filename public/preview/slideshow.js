@@ -97,16 +97,36 @@ export async function start({ isPreview }) {
     const subDurMs = group.slice(0, -1).map((s) => (s.transition?.duration ?? 1) * 1000)
     const totalMs = subDurMs.reduce((a, b) => a + b, 0)
 
+    let cumMs = 0
+    const subFracs = [0]
+    for (const d of subDurMs) { cumMs += d; subFracs.push(totalMs ? cumMs / totalMs : 0) }
+
+    let lastWaypoint = 0
+    const tickWaypoints = (easedT) => {
+      let wp = 0
+      for (let i = 1; i < subFracs.length - 1; i++) {
+        if (easedT >= subFracs[i]) wp = i
+      }
+      if (wp !== lastWaypoint) {
+        lastWaypoint = wp
+        applySlideState(viewer, manifest, group[wp])
+      }
+    }
+
     if (cameras.length === 2) {
       await rafLoop(totalMs, (raw) => {
-        const cam = lerpCamera(cameras[0], cameras[1], easeInOut(raw))
+        const easedT = easeInOut(raw)
+        tickWaypoints(easedT)
+        const cam = lerpCamera(cameras[0], cameras[1], easedT)
         viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
         viewer.setCameraState(cam)
       })
     } else {
       const prepared = prepareSplineSegment(cameras, subDurMs)
       await rafLoop(totalMs, (raw) => {
-        const cam = splineCameraAt(prepared, easeInOut(raw))
+        const easedT = easeInOut(raw)
+        tickWaypoints(easedT)
+        const cam = splineCameraAt(prepared, easedT)
         viewer.camera.up.set(...(cam.up ?? [0, 1, 0]))
         viewer.setCameraState(cam)
       })
