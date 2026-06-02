@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint --fix .",
     "format": "prettier --write .",
-    "vendor:refresh": "mkdir -p public/preview/vendor/three-addons/controls public/preview/vendor/three-addons/loaders public/preview/vendor/three-addons/utils && cp node_modules/three/build/three.module.js public/preview/vendor/three.module.js && cp node_modules/three/build/three.core.js public/preview/vendor/three.core.js && cp node_modules/three/examples/jsm/controls/OrbitControls.js public/preview/vendor/three-addons/controls/OrbitControls.js && cp node_modules/three/examples/jsm/loaders/GLTFLoader.js public/preview/vendor/three-addons/loaders/GLTFLoader.js && cp node_modules/three/examples/jsm/utils/BufferGeometryUtils.js public/preview/vendor/three-addons/utils/BufferGeometryUtils.js && cp node_modules/three/examples/jsm/utils/SkeletonUtils.js public/preview/vendor/three-addons/utils/SkeletonUtils.js && cp node_modules/@krisenstab/vantage/dist/lib/index.js public/preview/vendor/vantage.js"
+    "vendor:refresh": "mkdir -p public/preview/vendor/three-addons/controls public/preview/vendor/three-addons/loaders public/preview/vendor/three-addons/utils && cp node_modules/three/build/three.module.js public/preview/vendor/three.module.js && cp node_modules/three/build/three.core.js public/preview/vendor/three.core.js && cp node_modules/three/examples/jsm/controls/OrbitControls.js public/preview/vendor/three-addons/controls/OrbitControls.js && cp node_modules/three/examples/jsm/loaders/GLTFLoader.js public/preview/vendor/three-addons/loaders/GLTFLoader.js && cp node_modules/three/examples/jsm/loaders/PLYLoader.js public/preview/vendor/three-addons/loaders/PLYLoader.js&& cp node_modules/three/examples/jsm/utils/BufferGeometryUtils.js public/preview/vendor/three-addons/utils/BufferGeometryUtils.js && cp node_modules/three/examples/jsm/utils/SkeletonUtils.js public/preview/vendor/three-addons/utils/SkeletonUtils.js && cp node_modules/@krisenstab/vantage/dist/lib/index.js public/preview/vendor/vantage.js && cp node_modules/@sparkjsdev/spark/dist/spark.module.js public/preview/vendor/spark.module.js && mkdir -p public/preview/vendor/three-addons/postprocessing && cp node_modules/three/examples/jsm/postprocessing/Pass.js public/preview/vendor/three-addons/postprocessing/Pass.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -26,7 +26,8 @@
     "vite": "^8.0.4"
   },
   "dependencies": {
-    "@krisenstab/vantage": "^0.1.7",
+    "@krisenstab/vantage": "^0.2.0",
+    "@sparkjsdev/spark": "^2.1.0",
     "client-zip": "^2.5.0"
   }
 }
