@@ -14,6 +14,7 @@ const PREVIEW_FILES = [
   'vendor/three.core.js',
   'vendor/three-addons/controls/OrbitControls.js',
   'vendor/three-addons/loaders/GLTFLoader.js',
+  'vendor/three-addons/loaders/PLYLoader.js',
   'vendor/three-addons/utils/BufferGeometryUtils.js',
   'vendor/three-addons/utils/SkeletonUtils.js',
   'vendor/vantage.js',
