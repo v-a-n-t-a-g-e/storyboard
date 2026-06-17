@@ -34,6 +34,7 @@ function buildIndexHtml(mode, name) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${safeName}</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
     <link rel="stylesheet" href="./style.css" />
     <script type="importmap">
       {
@@ -126,6 +127,8 @@ export async function exportStaticSite(mode) {
       lastModified: new Date(),
       input: buildIndexHtml(mode, board.name),
     }
+    const faviconRes = await fetch('./favicon.png')
+    if (faviconRes.ok) yield { name: 'favicon.png', lastModified: new Date(), input: await faviconRes.blob() }
     for await (const { path, blob } of previewRuntimeFiles()) {
       yield { name: path, lastModified: new Date(), input: blob }
     }
